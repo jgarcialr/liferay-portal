@@ -16,7 +16,9 @@ package com.liferay.friendly.url.model.impl;
 
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.util.Validator;
 
 import org.osgi.annotation.versioning.ProviderType;
 
@@ -25,6 +27,25 @@ import org.osgi.annotation.versioning.ProviderType;
  */
 @ProviderType
 public class FriendlyURLEntryImpl extends FriendlyURLEntryBaseImpl {
+
+	@Override
+	public String getUrlTitle() {
+		String urlTitle = super.getUrlTitle();
+
+		if (!Validator.isBlank(urlTitle)) {
+			return urlTitle;
+		}
+
+		if (getLanguageIdToUrlTitleMap().size() > 0) {
+			return getLanguageIdToUrlTitleMap(
+			).entrySet(
+			).iterator(
+			).next(
+			).getValue();
+		}
+
+		return StringPool.BLANK;
+	}
 
 	@Override
 	public boolean isMain() throws PortalException {
