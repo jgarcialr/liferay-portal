@@ -16,8 +16,10 @@ package com.liferay.friendly.url.model.impl;
 
 import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalServiceUtil;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.exception.PortalException;
 
+import com.liferay.portal.kernel.util.Validator;
 import org.osgi.annotation.versioning.ProviderType;
 
 /**
@@ -37,6 +39,19 @@ public class FriendlyURLEntryImpl extends FriendlyURLEntryBaseImpl {
 		}
 
 		return false;
+	}
+
+	@Override
+	public String getUrlTitle() {
+		String urlTitle = super.getUrlTitle();
+		if(!Validator.isBlank(urlTitle)){
+			return urlTitle;
+		}else{
+			if(getLanguageIdToUrlTitleMap().size()>0){
+				return getLanguageIdToUrlTitleMap().entrySet().iterator().next().getValue();
+			}
+		}
+		return StringPool.BLANK;
 	}
 
 }
