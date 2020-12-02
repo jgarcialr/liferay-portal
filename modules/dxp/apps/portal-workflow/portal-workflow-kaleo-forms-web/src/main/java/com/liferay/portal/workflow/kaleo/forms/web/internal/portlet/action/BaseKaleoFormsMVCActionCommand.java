@@ -126,8 +126,10 @@ public abstract class BaseKaleoFormsMVCActionCommand
 					beforeReviewDDMFormFieldValue.getInstanceId());
 
 			if (actualDDMFormFieldValue == null) {
-				removedByReviewerDDMFormFieldValues.add(
-					beforeReviewDDMFormFieldValue);
+				if(!beforeReviewDDMFormFieldValue.getDDMFormField().isReadOnly()) {
+					removedByReviewerDDMFormFieldValues.add(
+						beforeReviewDDMFormFieldValue);
+				}
 			}
 			else {
 				List<DDMFormFieldValue>
