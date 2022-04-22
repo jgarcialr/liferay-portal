@@ -107,6 +107,26 @@ SortPortletInstanceConfiguration sortPortletInstanceConfiguration = sortDisplayC
 				selections,
 				document.location.search
 			);
-		});
+		}).on(('keyPress', (event) => {
+				if (event.key === 'Enter') {
+					var selections = [];
+
+					var sortSelect = A.one('#<portlet:namespace />sortSelection').get(
+					'value'
+					);
+
+					selections.push(sortSelect);
+
+					var key = A.one('#<portlet:namespace />sort-parameter-name').get(
+					'value'
+					);
+
+					document.location.search = Liferay.Search.SortUtil.updateQueryString(
+					key,
+					selections,
+					document.location.search
+					);
+				}
+		}));
 	});
 </aui:script>
