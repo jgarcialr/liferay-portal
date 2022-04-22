@@ -89,44 +89,49 @@ SortPortletInstanceConfiguration sortPortletInstanceConfiguration = sortDisplayC
 
 <aui:script use="liferay-search-sort-util">
 	AUI().ready('aui-base', 'node', 'event', (A) => {
-		A.one('#<portlet:namespace />sortSelection').on('click', () => {
-			var selections = [];
+		A.one('#<portlet:namespace />sortSelection')
+			.on('click', () => {
+				var selections = [];
 
-			var sortSelect = A.one('#<portlet:namespace />sortSelection').get(
-				'value'
-			);
-
-			selections.push(sortSelect);
-
-			var key = A.one('#<portlet:namespace />sort-parameter-name').get(
-				'value'
-			);
-
-			document.location.search = Liferay.Search.SortUtil.updateQueryString(
-				key,
-				selections,
-				document.location.search
-			);
-		}).on(('keyPress', (event) => {
-				if (event.key === 'Enter') {
-					var selections = [];
-
-					var sortSelect = A.one('#<portlet:namespace />sortSelection').get(
+				var sortSelect = A.one('#<portlet:namespace />sortSelection').get(
 					'value'
-					);
+				);
 
-					selections.push(sortSelect);
+				selections.push(sortSelect);
 
-					var key = A.one('#<portlet:namespace />sort-parameter-name').get(
+				var key = A.one('#<portlet:namespace />sort-parameter-name').get(
 					'value'
-					);
+				);
 
-					document.location.search = Liferay.Search.SortUtil.updateQueryString(
+				document.location.search = Liferay.Search.SortUtil.updateQueryString(
 					key,
 					selections,
 					document.location.search
-					);
-				}
-		}));
+				);
+			})
+			.on(
+				('keyPress',
+				(event) => {
+					if (event.key === 'Enter') {
+						var selections = [];
+
+						var sortSelect = A.one(
+							'#<portlet:namespace />sortSelection'
+						).get('value');
+
+						selections.push(sortSelect);
+
+						var key = A.one(
+							'#<portlet:namespace />sort-parameter-name'
+						).get('value');
+
+						document.location.search = Liferay.Search.SortUtil.updateQueryString(
+							key,
+							selections,
+							document.location.search
+						);
+					}
+				})
+			);
 	});
 </aui:script>
