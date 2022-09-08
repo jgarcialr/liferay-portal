@@ -821,16 +821,17 @@ public class ExpandoValueLocalServiceImpl
 				value.setStringArray((String[])attributeValue);
 			}
 			else if (type == ExpandoColumnConstants.STRING_LOCALIZED) {
-
 				Map<Locale, String> defaultValuesMap =
 					(Map<Locale, String>)attributeValue;
 
 				Locale defaultLocale = LocaleUtil.getDefault();
+
 				if (Validator.isNull(defaultValuesMap.get(defaultLocale))) {
 					for (String defaultValue : defaultValuesMap.values()) {
 						if (Validator.isNotNull(defaultValue)) {
-							throw new ValueDataException.MustInformDefaultLocale(
-								LocaleUtil.getDefault());
+							throw new ValueDataException.
+								MustInformDefaultLocale(
+									LocaleUtil.getDefault());
 						}
 					}
 				}
