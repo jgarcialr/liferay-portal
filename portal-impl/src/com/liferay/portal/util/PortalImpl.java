@@ -16,6 +16,7 @@ package com.liferay.portal.util;
 
 import com.liferay.counter.kernel.service.CounterLocalServiceUtil;
 import com.liferay.document.library.kernel.exception.ImageSizeException;
+import com.liferay.document.library.kernel.exception.NoSuchFileEntryException;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolder;
 import com.liferay.expando.kernel.exception.ValueDataException;
@@ -42,7 +43,6 @@ import com.liferay.portal.kernel.dao.orm.QueryUtil;
 import com.liferay.portal.kernel.encryptor.EncryptorUtil;
 import com.liferay.portal.kernel.exception.ImageTypeException;
 import com.liferay.portal.kernel.exception.NoSuchGroupException;
-import com.liferay.portal.kernel.exception.NoSuchImageException;
 import com.liferay.portal.kernel.exception.NoSuchLayoutException;
 import com.liferay.portal.kernel.exception.NoSuchUserException;
 import com.liferay.portal.kernel.exception.PortalException;
@@ -6558,7 +6558,7 @@ public class PortalImpl implements Portal {
 					exception.getMessage()));
 		}
 
-		if (exception instanceof NoSuchImageException) {
+		if (exception instanceof NoSuchFileEntryException) {
 			if (_webServerServletLog.isWarnEnabled()) {
 				_webServerServletLog.warn(exception, exception);
 			}
@@ -6663,7 +6663,11 @@ public class PortalImpl implements Portal {
 
 			httpServletResponse.setStatus(status);
 
-			SessionErrors.add(httpSession, exception.getClass(), exception);
+			if ((exception != null) &&
+				!(exception instanceof NoSuchFileEntryException)) {
+
+				SessionErrors.add(httpSession, exception.getClass(), exception);
+			}
 
 			ServletContext servletContext = httpSession.getServletContext();
 
