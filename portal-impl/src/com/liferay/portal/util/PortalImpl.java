@@ -6667,9 +6667,7 @@ public class PortalImpl implements Portal {
 
 			httpServletResponse.setStatus(status);
 
-			if ((exception != null) &&
-				!(exception instanceof NoSuchFileEntryException)) {
-
+			if (!(exception instanceof NoSuchFileEntryException)) {
 				SessionErrors.add(httpSession, exception.getClass(), exception);
 			}
 
