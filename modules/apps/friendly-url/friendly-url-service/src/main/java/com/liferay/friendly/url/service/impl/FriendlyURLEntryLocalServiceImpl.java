@@ -33,6 +33,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.language.Language;
 import com.liferay.portal.kernel.model.Group;
+import com.liferay.portal.kernel.model.Layout;
 import com.liferay.portal.kernel.model.ModelHintsUtil;
 import com.liferay.portal.kernel.service.ClassNameLocalService;
 import com.liferay.portal.kernel.service.GroupLocalService;
@@ -702,21 +703,47 @@ public class FriendlyURLEntryLocalServiceImpl
 						existingFriendlyURLEntryLocalization.getLanguageId();
 
 					if ((existingFriendlyURLEntryLocalization.getClassPK() ==
-							classPK) &&
-						existingLanguageId.equals(entry.getKey())) {
+							classPK)){
+						if(existingLanguageId.equals(entry.getKey())) {
 
-						String existingUrlTitle =
-							existingFriendlyURLEntryLocalization.getUrlTitle();
+							String existingUrlTitle =
+								existingFriendlyURLEntryLocalization.getUrlTitle();
 
-						if (existingUrlTitle.equals(oldURLTitle)) {
-							existingFriendlyURLEntryLocalization.
-								setFriendlyURLEntryId(
-									friendlyURLEntry.getFriendlyURLEntryId());
+							if (existingUrlTitle.equals(oldURLTitle)) {
+								existingFriendlyURLEntryLocalization.
+									setFriendlyURLEntryId(
+										friendlyURLEntry.getFriendlyURLEntryId());
 
-							updateFriendlyURLLocalization(
-								existingFriendlyURLEntryLocalization);
+								updateFriendlyURLLocalization(
+									existingFriendlyURLEntryLocalization);
 
-							continue;
+								continue;
+							}
+						}else if(existingFriendlyURLEntryLocalization.getClassName().contains(
+							Layout.class.getName())){
+
+							FriendlyURLEntryLocalization
+								curLangFriendlyURLEntryLocalization =
+									friendlyURLEntryLocalizationPersistence.
+										fetchByFriendlyURLEntryId_LanguageId(
+											existingFriendlyURLEntryLocalization.getFriendlyURLEntryId(),entry.getKey());
+							if(curLangFriendlyURLEntryLocalization != null) {
+								String curLangUrlTitle =
+									curLangFriendlyURLEntryLocalization.getUrlTitle();
+								if (curLangUrlTitle.equals(oldURLTitle)) {
+									curLangFriendlyURLEntryLocalization.
+										setFriendlyURLEntryId(
+											friendlyURLEntry.getFriendlyURLEntryId());
+
+									updateFriendlyURLLocalization(
+										curLangFriendlyURLEntryLocalization);
+
+									continue;
+								}
+							}else{
+								updateFriendlyURLEntryLocalization(
+									friendlyURLEntry, entry.getKey(), normalizedUrlTitle);
+							}
 						}
 					}
 					else {
