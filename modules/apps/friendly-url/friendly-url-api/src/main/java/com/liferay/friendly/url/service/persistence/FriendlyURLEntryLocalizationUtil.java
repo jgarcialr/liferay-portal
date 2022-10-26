@@ -389,84 +389,6 @@ public class FriendlyURLEntryLocalizationUtil {
 	}
 
 	/**
-	 * Returns the friendly url entry localization where groupId = &#63; and classNameId = &#63; and urlTitle = &#63; or throws a <code>NoSuchFriendlyURLEntryLocalizationException</code> if it could not be found.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param urlTitle the url title
-	 * @return the matching friendly url entry localization
-	 * @throws NoSuchFriendlyURLEntryLocalizationException if a matching friendly url entry localization could not be found
-	 */
-	public static FriendlyURLEntryLocalization findByG_C_U(
-			long groupId, long classNameId, String urlTitle)
-		throws com.liferay.friendly.url.exception.
-			NoSuchFriendlyURLEntryLocalizationException {
-
-		return getPersistence().findByG_C_U(groupId, classNameId, urlTitle);
-	}
-
-	/**
-	 * Returns the friendly url entry localization where groupId = &#63; and classNameId = &#63; and urlTitle = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param urlTitle the url title
-	 * @return the matching friendly url entry localization, or <code>null</code> if a matching friendly url entry localization could not be found
-	 */
-	public static FriendlyURLEntryLocalization fetchByG_C_U(
-		long groupId, long classNameId, String urlTitle) {
-
-		return getPersistence().fetchByG_C_U(groupId, classNameId, urlTitle);
-	}
-
-	/**
-	 * Returns the friendly url entry localization where groupId = &#63; and classNameId = &#63; and urlTitle = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param urlTitle the url title
-	 * @param useFinderCache whether to use the finder cache
-	 * @return the matching friendly url entry localization, or <code>null</code> if a matching friendly url entry localization could not be found
-	 */
-	public static FriendlyURLEntryLocalization fetchByG_C_U(
-		long groupId, long classNameId, String urlTitle,
-		boolean useFinderCache) {
-
-		return getPersistence().fetchByG_C_U(
-			groupId, classNameId, urlTitle, useFinderCache);
-	}
-
-	/**
-	 * Removes the friendly url entry localization where groupId = &#63; and classNameId = &#63; and urlTitle = &#63; from the database.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param urlTitle the url title
-	 * @return the friendly url entry localization that was removed
-	 */
-	public static FriendlyURLEntryLocalization removeByG_C_U(
-			long groupId, long classNameId, String urlTitle)
-		throws com.liferay.friendly.url.exception.
-			NoSuchFriendlyURLEntryLocalizationException {
-
-		return getPersistence().removeByG_C_U(groupId, classNameId, urlTitle);
-	}
-
-	/**
-	 * Returns the number of friendly url entry localizations where groupId = &#63; and classNameId = &#63; and urlTitle = &#63;.
-	 *
-	 * @param groupId the group ID
-	 * @param classNameId the class name ID
-	 * @param urlTitle the url title
-	 * @return the number of matching friendly url entry localizations
-	 */
-	public static int countByG_C_U(
-		long groupId, long classNameId, String urlTitle) {
-
-		return getPersistence().countByG_C_U(groupId, classNameId, urlTitle);
-	}
-
-	/**
 	 * Returns all the friendly url entry localizations where groupId = &#63; and classNameId = &#63; and classPK = &#63; and languageId = &#63;.
 	 *
 	 * @param groupId the group ID
@@ -690,6 +612,93 @@ public class FriendlyURLEntryLocalizationUtil {
 
 		return getPersistence().countByG_C_C_L(
 			groupId, classNameId, classPK, languageId);
+	}
+
+	/**
+	 * Returns the friendly url entry localization where groupId = &#63; and classNameId = &#63; and languageId = &#63; and urlTitle = &#63; or throws a <code>NoSuchFriendlyURLEntryLocalizationException</code> if it could not be found.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param languageId the language ID
+	 * @param urlTitle the url title
+	 * @return the matching friendly url entry localization
+	 * @throws NoSuchFriendlyURLEntryLocalizationException if a matching friendly url entry localization could not be found
+	 */
+	public static FriendlyURLEntryLocalization findByG_C_L_U(
+			long groupId, long classNameId, String languageId, String urlTitle)
+		throws com.liferay.friendly.url.exception.
+			NoSuchFriendlyURLEntryLocalizationException {
+
+		return getPersistence().findByG_C_L_U(
+			groupId, classNameId, languageId, urlTitle);
+	}
+
+	/**
+	 * Returns the friendly url entry localization where groupId = &#63; and classNameId = &#63; and languageId = &#63; and urlTitle = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param languageId the language ID
+	 * @param urlTitle the url title
+	 * @return the matching friendly url entry localization, or <code>null</code> if a matching friendly url entry localization could not be found
+	 */
+	public static FriendlyURLEntryLocalization fetchByG_C_L_U(
+		long groupId, long classNameId, String languageId, String urlTitle) {
+
+		return getPersistence().fetchByG_C_L_U(
+			groupId, classNameId, languageId, urlTitle);
+	}
+
+	/**
+	 * Returns the friendly url entry localization where groupId = &#63; and classNameId = &#63; and languageId = &#63; and urlTitle = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param languageId the language ID
+	 * @param urlTitle the url title
+	 * @param useFinderCache whether to use the finder cache
+	 * @return the matching friendly url entry localization, or <code>null</code> if a matching friendly url entry localization could not be found
+	 */
+	public static FriendlyURLEntryLocalization fetchByG_C_L_U(
+		long groupId, long classNameId, String languageId, String urlTitle,
+		boolean useFinderCache) {
+
+		return getPersistence().fetchByG_C_L_U(
+			groupId, classNameId, languageId, urlTitle, useFinderCache);
+	}
+
+	/**
+	 * Removes the friendly url entry localization where groupId = &#63; and classNameId = &#63; and languageId = &#63; and urlTitle = &#63; from the database.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param languageId the language ID
+	 * @param urlTitle the url title
+	 * @return the friendly url entry localization that was removed
+	 */
+	public static FriendlyURLEntryLocalization removeByG_C_L_U(
+			long groupId, long classNameId, String languageId, String urlTitle)
+		throws com.liferay.friendly.url.exception.
+			NoSuchFriendlyURLEntryLocalizationException {
+
+		return getPersistence().removeByG_C_L_U(
+			groupId, classNameId, languageId, urlTitle);
+	}
+
+	/**
+	 * Returns the number of friendly url entry localizations where groupId = &#63; and classNameId = &#63; and languageId = &#63; and urlTitle = &#63;.
+	 *
+	 * @param groupId the group ID
+	 * @param classNameId the class name ID
+	 * @param languageId the language ID
+	 * @param urlTitle the url title
+	 * @return the number of matching friendly url entry localizations
+	 */
+	public static int countByG_C_L_U(
+		long groupId, long classNameId, String languageId, String urlTitle) {
+
+		return getPersistence().countByG_C_L_U(
+			groupId, classNameId, languageId, urlTitle);
 	}
 
 	/**

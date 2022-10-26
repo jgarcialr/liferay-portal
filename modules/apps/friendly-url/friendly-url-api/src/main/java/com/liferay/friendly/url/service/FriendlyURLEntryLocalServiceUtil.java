@@ -290,11 +290,19 @@ public class FriendlyURLEntryLocalServiceUtil {
 		return getService().fetchFriendlyURLEntry(groupId, clazz, urlTitle);
 	}
 
+	@Deprecated
 	public static FriendlyURLEntry fetchFriendlyURLEntry(
 		long groupId, long classNameId, String urlTitle) {
 
 		return getService().fetchFriendlyURLEntry(
 			groupId, classNameId, urlTitle);
+	}
+
+	public static FriendlyURLEntry fetchFriendlyURLEntry(
+		long groupId, long classNameId, String languageId, String urlTitle) {
+
+		return getService().fetchFriendlyURLEntry(
+			groupId, classNameId, languageId, urlTitle);
 	}
 
 	/**
@@ -311,12 +319,22 @@ public class FriendlyURLEntryLocalServiceUtil {
 			uuid, groupId);
 	}
 
+	@Deprecated
 	public static com.liferay.friendly.url.model.FriendlyURLEntryLocalization
 		fetchFriendlyURLEntryLocalization(
 			long groupId, long classNameId, String urlTitle) {
 
 		return getService().fetchFriendlyURLEntryLocalization(
 			groupId, classNameId, urlTitle);
+	}
+
+	public static com.liferay.friendly.url.model.FriendlyURLEntryLocalization
+		fetchFriendlyURLEntryLocalization(
+			long groupId, long classNameId, String languageId,
+			String urlTitle) {
+
+		return getService().fetchFriendlyURLEntryLocalization(
+			groupId, classNameId, languageId, urlTitle);
 	}
 
 	public static com.liferay.friendly.url.model.FriendlyURLEntryLocalization
@@ -441,6 +459,7 @@ public class FriendlyURLEntryLocalServiceUtil {
 		return getService().getFriendlyURLEntryByUuidAndGroupId(uuid, groupId);
 	}
 
+	@Deprecated
 	public static com.liferay.friendly.url.model.FriendlyURLEntryLocalization
 			getFriendlyURLEntryLocalization(
 				long groupId, long classNameId, String urlTitle)
@@ -449,6 +468,17 @@ public class FriendlyURLEntryLocalServiceUtil {
 
 		return getService().getFriendlyURLEntryLocalization(
 			groupId, classNameId, urlTitle);
+	}
+
+	public static com.liferay.friendly.url.model.FriendlyURLEntryLocalization
+			getFriendlyURLEntryLocalization(
+				long groupId, long classNameId, String languageId,
+				String urlTitle)
+		throws com.liferay.friendly.url.exception.
+			NoSuchFriendlyURLEntryLocalizationException {
+
+		return getService().getFriendlyURLEntryLocalization(
+			groupId, classNameId, languageId, urlTitle);
 	}
 
 	public static com.liferay.friendly.url.model.FriendlyURLEntryLocalization
@@ -625,6 +655,15 @@ public class FriendlyURLEntryLocalServiceUtil {
 		throws PortalException {
 
 		getService().validate(groupId, classNameId, classPK, urlTitle);
+	}
+
+	public static void validate(
+			long groupId, long classNameId, long classPK, String languageId,
+			String urlTitle)
+		throws PortalException {
+
+		getService().validate(
+			groupId, classNameId, classPK, languageId, urlTitle);
 	}
 
 	public static void validate(long groupId, long classNameId, String urlTitle)

@@ -208,16 +208,6 @@ public class FriendlyURLEntryLocalizationPersistenceTest {
 	}
 
 	@Test
-	public void testCountByG_C_U() throws Exception {
-		_persistence.countByG_C_U(
-			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "");
-
-		_persistence.countByG_C_U(0L, 0L, "null");
-
-		_persistence.countByG_C_U(0L, 0L, (String)null);
-	}
-
-	@Test
 	public void testCountByG_C_C_L() throws Exception {
 		_persistence.countByG_C_C_L(
 			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(),
@@ -226,6 +216,16 @@ public class FriendlyURLEntryLocalizationPersistenceTest {
 		_persistence.countByG_C_C_L(0L, 0L, 0L, "null");
 
 		_persistence.countByG_C_C_L(0L, 0L, 0L, (String)null);
+	}
+
+	@Test
+	public void testCountByG_C_L_U() throws Exception {
+		_persistence.countByG_C_L_U(
+			RandomTestUtil.nextLong(), RandomTestUtil.nextLong(), "", "");
+
+		_persistence.countByG_C_L_U(0L, 0L, "null", "null");
+
+		_persistence.countByG_C_L_U(0L, 0L, (String)null, (String)null);
 	}
 
 	@Test
@@ -564,6 +564,11 @@ public class FriendlyURLEntryLocalizationPersistenceTest {
 			ReflectionTestUtil.<Long>invoke(
 				friendlyURLEntryLocalization, "getColumnOriginalValue",
 				new Class<?>[] {String.class}, "classNameId"));
+		Assert.assertEquals(
+			friendlyURLEntryLocalization.getLanguageId(),
+			ReflectionTestUtil.invoke(
+				friendlyURLEntryLocalization, "getColumnOriginalValue",
+				new Class<?>[] {String.class}, "languageId"));
 		Assert.assertEquals(
 			friendlyURLEntryLocalization.getUrlTitle(),
 			ReflectionTestUtil.invoke(
