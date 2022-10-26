@@ -646,8 +646,10 @@ public class FriendlyURLEntryLocalServiceImpl
 	@Override
 	public void validate(long groupId, long classNameId, long classPK,String urlTitle)
 		throws PortalException {
+		String defaultLanguageId = LocaleUtil.toLanguageId(
+			LocaleUtil.getSiteDefault());
 
-		validate(groupId, classNameId, 0, languageId, urlTitle);
+		validate(groupId, classNameId, 0, defaultLanguageId, urlTitle);
 	}
 
 
@@ -762,8 +764,7 @@ public class FriendlyURLEntryLocalServiceImpl
 						existingFriendlyURLEntryLocalization.getLanguageId();
 
 					if ((existingFriendlyURLEntryLocalization.getClassPK() ==
-							classPK) &&
-						existingLanguageId.equals(entry.getKey())) {
+							classPK)) {
 
 						String existingUrlTitle =
 							existingFriendlyURLEntryLocalization.getUrlTitle();
