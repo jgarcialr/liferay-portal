@@ -37,15 +37,15 @@ public class LayoutFriendlyURLEntryValidatorImpl
 
 	@Override
 	public void validateFriendlyURLEntry(
-		long groupId, boolean privateLayout, long classPK, String urlTitle,
-		String languageId)
+			long groupId, boolean privateLayout, long classPK, String urlTitle,
+			String languageId)
 		throws PortalException {
 
 		try {
 			_friendlyURLEntryLocalService.validate(
 				groupId,
 				_layoutFriendlyURLEntryHelper.getClassNameId(privateLayout),
-				classPK,languageId, urlTitle);
+				classPK, languageId, urlTitle);
 		}
 		catch (DuplicateFriendlyURLEntryException
 					duplicateFriendlyURLEntryException) {
