@@ -492,6 +492,10 @@ public class FriendlyURLEntryLocalServiceImpl
 		String prefix = curUrlTitle;
 
 		for (int i = 1;; i++) {
+			if(Validator.isNull(languageId)){
+				languageId = LocaleUtil.toLanguageId(
+					LocaleUtil.getSiteDefault());
+			}
 			FriendlyURLEntryLocalization friendlyURLEntryLocalization =
 				friendlyURLEntryLocalizationPersistence.fetchByG_C_L_U(
 					groupId, classNameId, languageId, curUrlTitle);
