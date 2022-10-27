@@ -620,7 +620,7 @@ public class FriendlyURLEntryLocalServiceImpl
 		String defaultLanguageId = LocaleUtil.toLanguageId(
 			LocaleUtil.getSiteDefault());
 
-		validate(groupId, classNameId, 0, defaultLanguageId, urlTitle);
+		validate(groupId, classNameId, classPK, defaultLanguageId, urlTitle);
 	}
 
 	@Override
