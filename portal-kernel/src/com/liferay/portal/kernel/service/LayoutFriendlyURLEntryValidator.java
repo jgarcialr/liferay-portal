@@ -23,7 +23,7 @@ import com.liferay.portal.kernel.exception.PortalException;
 public interface LayoutFriendlyURLEntryValidator {
 
 	public void validateFriendlyURLEntry(
-			long groupId, boolean privateLayout, long classPK, String urlTitle)
+			long groupId, boolean privateLayout, long classPK, String urlTitle, String languageId)
 		throws PortalException;
 
 }
