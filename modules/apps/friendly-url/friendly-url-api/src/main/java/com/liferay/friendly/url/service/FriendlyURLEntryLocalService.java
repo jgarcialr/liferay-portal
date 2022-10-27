@@ -255,6 +255,10 @@ public interface FriendlyURLEntryLocalService
 	public FriendlyURLEntry fetchFriendlyURLEntry(
 		long groupId, long classNameId, String urlTitle);
 
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FriendlyURLEntry fetchFriendlyURLEntry(
+		long groupId, long classNameId, String languageId, String urlTitle);
+
 	/**
 	 * Returns the friendly url entry matching the UUID and group.
 	 *
@@ -266,9 +270,14 @@ public interface FriendlyURLEntryLocalService
 	public FriendlyURLEntry fetchFriendlyURLEntryByUuidAndGroupId(
 		String uuid, long groupId);
 
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FriendlyURLEntryLocalization fetchFriendlyURLEntryLocalization(
 		long groupId, long classNameId, String urlTitle);
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FriendlyURLEntryLocalization fetchFriendlyURLEntryLocalization(
+		long groupId, long classNameId, String languageId, String urlTitle);
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FriendlyURLEntryLocalization fetchFriendlyURLEntryLocalization(
@@ -361,9 +370,15 @@ public interface FriendlyURLEntryLocalService
 			String uuid, long groupId)
 		throws PortalException;
 
+	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FriendlyURLEntryLocalization getFriendlyURLEntryLocalization(
 			long groupId, long classNameId, String urlTitle)
+		throws NoSuchFriendlyURLEntryLocalizationException;
+
+	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
+	public FriendlyURLEntryLocalization getFriendlyURLEntryLocalization(
+			long groupId, long classNameId, String languageId, String urlTitle)
 		throws NoSuchFriendlyURLEntryLocalizationException;
 
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
@@ -469,6 +484,11 @@ public interface FriendlyURLEntryLocalService
 
 	public void validate(
 			long groupId, long classNameId, long classPK, String urlTitle)
+		throws PortalException;
+
+	public void validate(
+			long groupId, long classNameId, long classPK, String languageId,
+			String urlTitle)
 		throws PortalException;
 
 	public void validate(long groupId, long classNameId, String urlTitle)
