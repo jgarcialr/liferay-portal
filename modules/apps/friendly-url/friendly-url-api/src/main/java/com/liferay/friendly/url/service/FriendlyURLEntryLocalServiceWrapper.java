@@ -353,6 +353,10 @@ public class FriendlyURLEntryLocalServiceWrapper
 			fetchFriendlyURLEntryByUuidAndGroupId(uuid, groupId);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #fetchFriendlyURLEntryLocalization(long, long, String, String)}
+	 */
 	@Deprecated
 	@Override
 	public com.liferay.friendly.url.model.FriendlyURLEntryLocalization
@@ -512,6 +516,10 @@ public class FriendlyURLEntryLocalServiceWrapper
 			getFriendlyURLEntryByUuidAndGroupId(uuid, groupId);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getFriendlyURLEntryLocalization(long, long, String, String)}
+	 */
 	@Deprecated
 	@Override
 	public com.liferay.friendly.url.model.FriendlyURLEntryLocalization

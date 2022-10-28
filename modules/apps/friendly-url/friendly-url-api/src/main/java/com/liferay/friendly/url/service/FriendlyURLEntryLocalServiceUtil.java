@@ -318,6 +318,10 @@ public class FriendlyURLEntryLocalServiceUtil {
 			uuid, groupId);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #fetchFriendlyURLEntryLocalization(long, long, String, String)}
+	 */
 	@Deprecated
 	public static com.liferay.friendly.url.model.FriendlyURLEntryLocalization
 		fetchFriendlyURLEntryLocalization(
@@ -458,6 +462,10 @@ public class FriendlyURLEntryLocalServiceUtil {
 		return getService().getFriendlyURLEntryByUuidAndGroupId(uuid, groupId);
 	}
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getFriendlyURLEntryLocalization(long, long, String, String)}
+	 */
 	@Deprecated
 	public static com.liferay.friendly.url.model.FriendlyURLEntryLocalization
 			getFriendlyURLEntryLocalization(

@@ -270,6 +270,10 @@ public interface FriendlyURLEntryLocalService
 	public FriendlyURLEntry fetchFriendlyURLEntryByUuidAndGroupId(
 		String uuid, long groupId);
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #fetchFriendlyURLEntryLocalization(long, long, String, String)}
+	 */
 	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FriendlyURLEntryLocalization fetchFriendlyURLEntryLocalization(
@@ -370,6 +374,10 @@ public interface FriendlyURLEntryLocalService
 			String uuid, long groupId)
 		throws PortalException;
 
+	/**
+	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
+	 #getFriendlyURLEntryLocalization(long, long, String, String)}
+	 */
 	@Deprecated
 	@Transactional(propagation = Propagation.SUPPORTS, readOnly = true)
 	public FriendlyURLEntryLocalization getFriendlyURLEntryLocalization(
