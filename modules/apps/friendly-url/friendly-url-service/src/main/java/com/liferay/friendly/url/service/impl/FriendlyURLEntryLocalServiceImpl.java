@@ -344,11 +344,6 @@ public class FriendlyURLEntryLocalServiceImpl
 		return null;
 	}
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 *             #fetchFriendlyURLEntryLocalization(long, long, String, String)}
-	 */
-	@Deprecated
 	@Override
 	public FriendlyURLEntryLocalization fetchFriendlyURLEntryLocalization(
 		long groupId, long classNameId, String urlTitle) {
@@ -394,11 +389,6 @@ public class FriendlyURLEntryLocalServiceImpl
 			groupId, classNameId, classPK);
 	}
 
-	/**
-	 * @deprecated As of Cavanaugh (7.4.x), replaced by {@link
-	 *             #getFriendlyURLEntryLocalization(long, long, String, String)}
-	 */
-	@Deprecated
 	@Override
 	public FriendlyURLEntryLocalization getFriendlyURLEntryLocalization(
 			long groupId, long classNameId, String urlTitle)
@@ -454,11 +444,6 @@ public class FriendlyURLEntryLocalServiceImpl
 			friendlyURLEntryMapping.getFriendlyURLEntryId());
 	}
 
-	/**
-	 * @deprecated As of Athanasius (7.3.x), replaced by {@link
-	 *             #getUniqueUrlTitle(long, long, long, String, String)}
-	 */
-	@Deprecated
 	@Override
 	public String getUniqueUrlTitle(
 		long groupId, long classNameId, long classPK, String urlTitle) {
