@@ -15,6 +15,7 @@
 package com.liferay.layout.internal.model.listener;
 
 import com.liferay.exportimport.kernel.lar.ExportImportThreadLocal;
+import com.liferay.friendly.url.model.FriendlyURLEntry;
 import com.liferay.friendly.url.service.FriendlyURLEntryLocalService;
 import com.liferay.layout.friendly.url.LayoutFriendlyURLEntryHelper;
 import com.liferay.portal.kernel.exception.ModelListenerException;
@@ -47,6 +48,15 @@ public class LayoutFriendlyURLModelListener
 	}
 
 	@Override
+	public void onAfterRemove(LayoutFriendlyURL layoutFriendlyURL)
+		throws ModelListenerException {
+
+		if (!ExportImportThreadLocal.isImportInProcess()) {
+			_deleteFriendlyURLEntry(layoutFriendlyURL);
+		}
+	}
+
+	@Override
 	public void onAfterUpdate(
 			LayoutFriendlyURL originalLayoutFriendlyURL,
 			LayoutFriendlyURL layoutFriendlyURL)
@@ -71,6 +81,31 @@ public class LayoutFriendlyURLModelListener
 						layoutFriendlyURL.getLanguageId(),
 						layoutFriendlyURL.getFriendlyURL()),
 					ServiceContextThreadLocal.getServiceContext());
+			}
+		}
+		catch (PortalException portalException) {
+			throw new ModelListenerException(portalException);
+		}
+	}
+
+	private void _deleteFriendlyURLEntry(LayoutFriendlyURL layoutFriendlyURL) {
+		try {
+			if (!_stagingGroupHelper.isLiveGroup(
+					layoutFriendlyURL.getGroupId())) {
+
+				FriendlyURLEntry friendlyURLEntry =
+					_friendlyURLEntryLocalService.fetchFriendlyURLEntry(
+						layoutFriendlyURL.getGroupId(),
+						_layoutFriendlyURLEntryHelper.getClassNameId(
+							layoutFriendlyURL.isPrivateLayout()),
+						layoutFriendlyURL.getFriendlyURL());
+
+				if (friendlyURLEntry != null) {
+					_friendlyURLEntryLocalService.
+						deleteFriendlyURLLocalizationEntry(
+							friendlyURLEntry.getFriendlyURLEntryId(),
+							layoutFriendlyURL.getLanguageId());
+				}
 			}
 		}
 		catch (PortalException portalException) {
