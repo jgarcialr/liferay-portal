@@ -662,19 +662,20 @@ public class FriendlyURLEntryLocalServiceImpl
 			friendlyURLEntryLocalizationPersistence.fetchByG_C_L_U(
 				groupId, classNameId, languageId, urlTitle);
 
-		if (((friendlyURLEntryLocalization != null) &&
-			 (friendlyURLEntryLocalization.getClassPK() != notClassPK))) {
+		if ((friendlyURLEntryLocalization != null) &&
+			(friendlyURLEntryLocalization.getClassPK() != notClassPK)) {
 
 			return true;
 		}
 
-		FriendlyURLEntryLocalization friendlyURLEntryLocalizationNotLang =
+		FriendlyURLEntryLocalization friendlyURLEntryLocalizationNotLanguageId =
 			friendlyURLEntryLocalizationPersistence.fetchByG_C_NotL_U_First(
 				groupId, classNameId, languageId, urlTitle, null);
-		
-		if(((friendlyURLEntryLocalizationNotLang != null) &&
-			(friendlyURLEntryLocalizationNotLang.getClassPK() !=
-			 notClassPK))){
+
+		if ((friendlyURLEntryLocalizationNotLanguageId != null) &&
+			(friendlyURLEntryLocalizationNotLanguageId.getClassPK() !=
+				notClassPK)) {
+
 			return true;
 		}
 
