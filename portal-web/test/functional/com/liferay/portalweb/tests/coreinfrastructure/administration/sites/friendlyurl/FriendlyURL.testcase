@@ -42,6 +42,73 @@ definition {
 		AssertConsoleTextPresent(value1 = "NoSuchVirtualHostException");
 	}
 
+	@description = "Verify no error message is shown when navigating from a page with a missing image to another page."
+	@priority = "3"
+	test NavigateFromPageWithMissingImageWithoutError {
+		task ("Given an image is saved in Documents & Media") {
+			JSONDocument.addFileWithUploadedFile(
+				dmDocumentTitle = "Document_1.jpg",
+				groupName = "Test Site Name",
+				mimeType = "image/jpeg",
+				sourceFileName = "Document_1.jpg");
+		}
+
+		task ("And given a basic web content that includes the image as content") {
+			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
+
+			WebContentNavigator.gotoAddCP();
+
+			WebContent.addCP(
+				embedImage = "true",
+				imageFileName = "Document_1.jpg",
+				siteName = "Test Site Name",
+				webContentTitle = "WC WebContent Title");
+
+			PortletEntry.publish();
+		}
+
+		task ("And given a page with a Web Content Display widget configured to show the web content") {
+			JSONLayout.addPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Web Content Page");
+
+			JSONLayout.addWidgetToPublicLayout(
+				groupName = "Test Site Name",
+				layoutName = "Web Content Page",
+				widgetName = "Web Content Display");
+
+			Navigator.gotoSitePage(
+				pageName = "Web Content Page",
+				siteName = "Test Site Name");
+
+			WebContentDisplayPortlet.selectWebContent(webContentTitle = "WC WebContent Title");
+		}
+
+		task ("And given the user removes the image from Documents & Media") {
+			DMNavigator.openDocumentsAndMediaAdmin(siteURLKey = "test-site-name");
+
+			DMDocument.deleteCP(dmDocumentTitle = "Document_1.jpg");
+		}
+
+		task ("When the user goes to the web content page with the now missing image") {
+			Navigator.gotoSitePage(
+				pageName = "Web Content Page",
+				siteName = "Test Site Name");
+		}
+
+		task ("And navigates to a different page") {
+			User.openUsersAdmin();
+		}
+
+		task ("Then the page should open without error") {
+			if (IsElementPresent(locator1 = "Message#ERROR")) {
+				fail("Error message is present");
+			}
+
+			LexiconEntry.viewEntryName(rowEntry = "Test Test");
+		}
+	}
+
 	@description = "Verify navigating to the URL of an uncreated portlet does not throw errors."
 	@priority = "3"
 	test NavigatingToURLOfUncreatedPortletDoesNotThrowError {
