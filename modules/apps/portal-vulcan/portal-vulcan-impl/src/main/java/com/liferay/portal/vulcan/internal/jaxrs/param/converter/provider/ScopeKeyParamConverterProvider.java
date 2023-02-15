@@ -35,7 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.cxf.jaxrs.utils.AnnotationUtils;
 
 /**
- * @author Javier Gamarra
+ * @author Jorge García Jiménez
  */
 @Provider
 public class ScopeKeyParamConverterProvider
