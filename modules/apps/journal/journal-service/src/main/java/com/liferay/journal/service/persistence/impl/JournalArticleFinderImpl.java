@@ -526,7 +526,8 @@ public class JournalArticleFinderImpl
 			else {
 				sql = StringUtil.replace(
 					sql, "[$FOLDER_ID$]",
-					getFolderIds(folderIds, JournalArticleImpl.TABLE_NAME));
+					getFolderIdsAndTreePath(
+						folderIds, JournalArticleImpl.TABLE_NAME));
 			}
 
 			if (ddmStructureId <= 0) {
@@ -554,6 +555,10 @@ public class JournalArticleFinderImpl
 
 			for (Long folderId : folderIds) {
 				queryPos.add(folderId);
+			}
+
+			if (!folderIds.isEmpty()) {
+				queryPos.add(getTreePathArrayIds(folderIds));
 			}
 
 			if (ddmStructureId > 0) {
@@ -805,11 +810,13 @@ public class JournalArticleFinderImpl
 
 			if (folderIds.isEmpty()) {
 				sql = StringUtil.removeSubstring(sql, "([$FOLDER_ID$]) AND");
+				sql = StringUtil.removeSubstring(sql, "([$TREE_PATH$]) AND");
 			}
 			else {
 				sql = StringUtil.replace(
 					sql, "[$FOLDER_ID$]",
-					getFolderIds(folderIds, JournalArticleImpl.TABLE_NAME));
+					getFolderIdsAndTreePath(
+						folderIds, JournalArticleImpl.TABLE_NAME));
 			}
 
 			if (ddmStructureId <= 0) {
@@ -845,6 +852,10 @@ public class JournalArticleFinderImpl
 
 			for (Long folderId : folderIds) {
 				queryPos.add(folderId);
+			}
+
+			if (!folderIds.isEmpty()) {
+				queryPos.add(getTreePathArrayIds(folderIds));
 			}
 
 			if (ddmStructureId > 0) {
@@ -989,6 +1000,55 @@ public class JournalArticleFinderImpl
 		sb.append(StringPool.CLOSE_PARENTHESIS);
 
 		return sb.toString();
+	}
+
+	protected String getFolderIdsAndTreePath(
+		List<Long> folderIds, String tableName) {
+
+		if (folderIds.isEmpty()) {
+			return StringPool.BLANK;
+		}
+
+		StringBundler sb = new StringBundler((folderIds.size() * 6) + 1);
+
+		sb.append(StringPool.OPEN_PARENTHESIS);
+
+		for (int i = 0; i < folderIds.size(); i++) {
+			sb.append(tableName);
+			sb.append(".folderId = ? OR ");
+			sb.append(tableName);
+			sb.append(".treePath LIKE ? ");
+
+			if ((i + 1) != folderIds.size()) {
+				sb.append(WHERE_OR);
+			}
+		}
+
+		sb.append(StringPool.CLOSE_PARENTHESIS);
+
+		return sb.toString();
+	}
+
+	protected String[] getTreePathArrayIds(List<Long> folderIds) {
+		String[] folderIdsArray = new String[folderIds.size()];
+
+		for (int i = 0; i < folderIds.size(); i++) {
+			StringBundler sb = new StringBundler(5);
+
+			sb.append(StringPool.PERCENT);
+			sb.append(StringPool.SLASH);
+
+			if (folderIds.get(i) != 0) {
+				sb.append(String.valueOf(folderIds.get(i)));
+				sb.append(StringPool.SLASH);
+			}
+
+			sb.append(StringPool.PERCENT);
+
+			folderIdsArray[i] = sb.toString();
+		}
+
+		return folderIdsArray;
 	}
 
 	protected String replaceStatusJoin(
