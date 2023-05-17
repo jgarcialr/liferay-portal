@@ -810,7 +810,6 @@ public class JournalArticleFinderImpl
 
 			if (folderIds.isEmpty()) {
 				sql = StringUtil.removeSubstring(sql, "([$FOLDER_ID$]) AND");
-				sql = StringUtil.removeSubstring(sql, "([$TREE_PATH$]) AND");
 			}
 			else {
 				sql = StringUtil.replace(
