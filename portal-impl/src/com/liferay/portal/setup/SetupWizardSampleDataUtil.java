@@ -244,7 +244,7 @@ public class SetupWizardSampleDataUtil {
 			String type = (String)organizationArray[3];
 
 			Organization organization =
-				OrganizationLocalServiceUtil.addOrganization(
+				OrganizationLocalServiceUtil.addOrganization(null,
 					guestUser.getUserId(),
 					parentOrganization.getOrganizationId(), name, type,
 					regionId, countryId,

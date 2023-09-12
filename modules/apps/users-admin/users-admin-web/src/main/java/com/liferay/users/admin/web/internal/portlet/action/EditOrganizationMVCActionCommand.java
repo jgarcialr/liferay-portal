@@ -206,7 +206,7 @@ public class EditOrganizationMVCActionCommand
 
 			// Add organization
 
-			organization = _organizationService.addOrganization(
+			organization = _organizationService.addOrganization(null,
 				parentOrganizationId, name, type, regionId, countryId, statusId,
 				comments, false, Collections.emptyList(),
 				Collections.emptyList(), Collections.emptyList(),
@@ -230,6 +230,7 @@ public class EditOrganizationMVCActionCommand
 			Group organizationGroup = organization.getGroup();
 
 			organization = _organizationService.updateOrganization(
+				organization.getExternalReferenceCode(),
 				organizationId, parentOrganizationId, name, type, regionId,
 				countryId, statusId, comments, !deleteLogo, logoBytes,
 				organizationGroup.isSite(), null, null, null, null, null,

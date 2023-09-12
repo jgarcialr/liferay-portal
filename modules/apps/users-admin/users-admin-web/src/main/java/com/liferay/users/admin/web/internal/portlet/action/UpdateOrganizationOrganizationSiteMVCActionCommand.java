@@ -98,6 +98,7 @@ public class UpdateOrganizationOrganizationSiteMVCActionCommand
 			Organization.class.getName(), organizationId);
 
 		organization = _organizationService.updateOrganization(
+			organization.getExternalReferenceCode(),
 			organizationId, organization.getParentOrganizationId(),
 			organization.getName(), organization.getType(),
 			organization.getRegionId(), organization.getCountryId(),

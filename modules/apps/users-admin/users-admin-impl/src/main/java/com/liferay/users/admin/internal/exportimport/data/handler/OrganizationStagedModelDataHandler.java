@@ -171,7 +171,7 @@ public class OrganizationStagedModelDataHandler
 		if (existingOrganization == null) {
 			serviceContext.setUuid(organization.getUuid());
 
-			importedOrganization = _organizationLocalService.addOrganization(
+			importedOrganization = _organizationLocalService.addOrganization(null,
 				userId, parentOrganizationId, organization.getName(),
 				organization.getType(), organization.getRegionId(),
 				organization.getCountryId(), organization.getStatusListTypeId(),
@@ -179,6 +179,7 @@ public class OrganizationStagedModelDataHandler
 		}
 		else {
 			importedOrganization = _organizationLocalService.updateOrganization(
+				existingOrganization.getExternalReferenceCode(),
 				portletDataContext.getCompanyId(),
 				existingOrganization.getOrganizationId(), parentOrganizationId,
 				organization.getName(), organization.getType(),

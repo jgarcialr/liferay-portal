@@ -64,7 +64,7 @@ public class OrganizationImporter {
 		Country country = _countryService.getCountryByA2(
 			serviceContext.getCompanyId(), twoLetterISOCode);
 
-		organization = _organizationLocalService.addOrganization(
+		organization = _organizationLocalService.addOrganization(null,
 			serviceContext.getUserId(), parentOrganizationId, name,
 			OrganizationConstants.TYPE_ORGANIZATION, 0, country.getCountryId(),
 			ListTypeConstants.ORGANIZATION_STATUS_DEFAULT, StringPool.BLANK,
