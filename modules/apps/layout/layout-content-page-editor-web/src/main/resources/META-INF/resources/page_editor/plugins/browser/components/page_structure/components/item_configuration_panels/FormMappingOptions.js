@@ -13,6 +13,8 @@ import {SelectField} from '../../../../../../app/components/fragment_configurati
 import {FORM_MAPPING_SOURCES} from '../../../../../../app/config/constants/formMappingSources';
 import {LAYOUT_TYPES} from '../../../../../../app/config/constants/layoutTypes';
 import {config} from '../../../../../../app/config/index';
+import {useSelector} from '../../../../../../app/contexts/StoreContext';
+import selectSegmentsExperienceId from '../../../../../../app/selectors/selectSegmentsExperienceId';
 import {formIsMapped} from '../../../../../../app/utils/formIsMapped';
 import {openInfoFieldSelector} from '../../../../../../common/openInfoFieldSelector';
 
@@ -21,6 +23,8 @@ export default function FormMappingOptions({
 	item,
 	onValueSelect,
 }) {
+	const segmentsExperienceId = useSelector(selectSegmentsExperienceId);
+
 	const formTypes = useMemo(() => getTypes(), []);
 
 	const [classNameId, setClassNameId] = useControlledState(
@@ -42,25 +46,36 @@ export default function FormMappingOptions({
 			};
 
 			const saveMapping = (fields = []) =>
-				onValueSelect({
-					classNameId,
-					classTypeId,
-					fields: fields.map(({uniqueId}) => uniqueId),
-					formConfig: FORM_MAPPING_SOURCES.otherContentType,
-				});
+				onValueSelect(
+					{
+						classNameId,
+						classTypeId,
+						formConfig: FORM_MAPPING_SOURCES.otherContentType,
+					},
+					fields.map(({uniqueId}) => uniqueId)
+				);
 
 			if (Liferay.FeatureFlags['LPD-20213'] && classNameId !== '0') {
 				openInfoFieldSelector({
+					formItemId: item.itemId,
 					itemType: type.className,
 					onCancel: resetMapping,
 					onSave: saveMapping,
+					segmentsExperienceId,
 				});
 			}
 			else {
 				saveMapping();
 			}
 		},
-		[formTypes, item, onValueSelect, setClassNameId, setClassTypeId]
+		[
+			formTypes,
+			item,
+			onValueSelect,
+			setClassNameId,
+			setClassTypeId,
+			segmentsExperienceId,
+		]
 	);
 
 	return (
