@@ -45,7 +45,7 @@ public class DLKeyStoreManagerImpl extends BaseKeyStoreManagerImpl {
 
 		try (InputStream inputStream = _store.getFileAsStream(
 				getCompanyId(), CompanyConstants.SYSTEM, _SAML_KEYSTORE_PATH,
-				StringPool.BLANK)) {
+				Store.VERSION_DEFAULT)) {
 
 			String samlKeyStorePassword = getSamlKeyStorePassword();
 
@@ -119,7 +119,7 @@ public class DLKeyStoreManagerImpl extends BaseKeyStoreManagerImpl {
 		updateConfigurations(properties);
 	}
 
-	private static final String _SAML_KEYSTORE_PATH = "/saml/keystore.jks";
+	private static final String _SAML_KEYSTORE_PATH = "saml/keystore.jks";
 
 	private static final Log _log = LogFactoryUtil.getLog(
 		DLKeyStoreManagerImpl.class);
