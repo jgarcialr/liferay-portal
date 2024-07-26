@@ -3543,7 +3543,7 @@ definition {
 		task ("When the user adds the configuration") {
 			var bucketId = PropsUtil.get("gcs.bucket.id");
 
-            AntCommands.runCommand("build-test.xml", "prepare-gcs-store-configuration -Dgcs.bucket.id=${bucketId}");
+			AntCommands.runCommand("build-test.xml", "prepare-gcs-store-configuration -Dgcs.bucket.id=${bucketId}");
 
 			while ((IsElementNotPresent(locator1 = "Select#SELECT_VALUE_ID", option = "com.liferay.portal.store.gcs.GCSStore", selectFieldId = "dl-store-impl")) && (maxIterations = "2")) {
 				OSGiConfig.waitForOSGiConfig();
@@ -3576,8 +3576,8 @@ definition {
 
 		task ("Then the document is migrated over from the default store to the GCS bucket") {
 			var companyId = JSONCompany.getCompanyId();
-        	var folderName = "saml";
-            var groupId = 0;
+			var folderName = "saml";
+			var groupId = 0;
 
 			AntCommands.runCommand("build-test-gcs-store.xml", "assert-document-in-bucket -Dcompany.id=${companyId} -Dfolder.name=${folderName} -Dgcs.bucket.id=${bucketId} -Dgroup.id=${groupId}");
 		}
@@ -3592,11 +3592,9 @@ definition {
 			Portlet.startServer(deleteLiferayHome = "false");
 
 			User.firstLoginPG();
-
 		}
 
 		task ("Assert certificate is migrated.") {
-
 			SAML.goToSAMLAdmin();
 
 			AssertElementPresent(locator1 = "CPSAMLAdmin#DOWNLOAD_CERTIFICATE");
