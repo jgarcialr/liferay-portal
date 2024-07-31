@@ -3503,6 +3503,7 @@ definition {
 	@priority = 5
 	test KeystoreManagerTargetShouldWorkAfterChangeFromDefaultAndMigratedToGCSStore {
 		property app.server.bundles.size = "0";
+		property gcs.store.enabled = "true";
 		property store.migration.test = "true";
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
