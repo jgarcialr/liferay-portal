@@ -55,7 +55,7 @@ public class OpenIdConnectLoginResponseMVCActionCommand
 			(ThemeDisplay)httpServletRequest.getAttribute(
 				WebKeys.THEME_DISPLAY);
 
-		if (!_openIdConnect.isEnabled(themeDisplay.getCompanyId())) {
+		if (!_openIdConnect.isEnabled(themeDisplay.getCompanyId()) && (1==1)) {
 			return;
 		}
 
