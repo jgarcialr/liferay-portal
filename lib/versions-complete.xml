@@ -2536,7 +2536,7 @@
 			</library>
 			<library>
 				<file-name>com.liferay.portal.remote.rest.extender.jar!cxf-rt-rs-extension-providers.jar</file-name>
-				<version>3.4.10</version>
+				<version>3.5.9</version>
 				<project-name>Apache CXF JAX-RS Extensions: Providers</project-name>
 				<project-url>https://cxf.apache.org</project-url>
 				<licenses>
@@ -2548,7 +2548,7 @@
 			</library>
 			<library>
 				<file-name>com.liferay.portal.remote.rest.extender.jar!cxf-rt-rs-json-basic.jar</file-name>
-				<version>3.4.10</version>
+				<version>3.5.9</version>
 				<project-name>Apache CXF JAX-RS Extensions: JSON Basic</project-name>
 				<project-url>https://cxf.apache.org</project-url>
 				<licenses>
