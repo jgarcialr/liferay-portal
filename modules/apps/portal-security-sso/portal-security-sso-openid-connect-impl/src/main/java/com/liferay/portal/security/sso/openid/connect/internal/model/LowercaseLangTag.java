@@ -14,9 +14,9 @@ import java.util.List;
 /**
  * @author Jorge García Jiménez
  */
-public class LRLangTag extends LangTag {
+public class LowercaseLangTag extends LangTag {
 
-	public static LRLangTag parse(String s, boolean lowerCase)
+	public static LowercaseLangTag parse(String s, boolean lowerCase)
 		throws LangTagException {
 
 		if ((s != null) &&
@@ -38,7 +38,7 @@ public class LRLangTag extends LangTag {
 				extLangSubtags.add(subtags[pos++]);
 			}
 
-			LRLangTag langTag = new LRLangTag(
+			LowercaseLangTag langTag = new LowercaseLangTag(
 				primaryLang, lowerCase,
 				(String[])extLangSubtags.toArray(new String[0]));
 
@@ -101,7 +101,7 @@ public class LRLangTag extends LangTag {
 		return null;
 	}
 
-	public LRLangTag(
+	public LowercaseLangTag(
 			String primaryLanguage, boolean lowerCase,
 			String... languageSubtags)
 		throws LangTagException {

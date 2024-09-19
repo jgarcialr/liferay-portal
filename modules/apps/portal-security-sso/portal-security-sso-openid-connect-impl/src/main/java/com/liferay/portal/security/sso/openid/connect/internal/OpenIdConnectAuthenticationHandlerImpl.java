@@ -25,7 +25,7 @@ import com.liferay.portal.security.sso.openid.connect.OpenIdConnectAuthenticatio
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnectServiceException;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectConstants;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectWebKeys;
-import com.liferay.portal.security.sso.openid.connect.internal.model.LRLangTag;
+import com.liferay.portal.security.sso.openid.connect.internal.model.LowercaseLangTag;
 import com.liferay.portal.security.sso.openid.connect.internal.session.manager.OfflineOpenIdConnectSessionManager;
 import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnectProviderUtil;
 import com.liferay.portal.security.sso.openid.connect.internal.util.OpenIdConnectRequestParametersUtil;
@@ -364,7 +364,7 @@ public class OpenIdConnectAuthenticationHandlerImpl
 		}
 	}
 
-	private List<LRLangTag> _getLangTags(
+	private List<LowercaseLangTag> _getLangTags(
 		HttpServletRequest httpServletRequest, boolean sendLocaleLowercase) {
 
 		Locale locale = _portal.getLocale(httpServletRequest);
@@ -375,7 +375,7 @@ public class OpenIdConnectAuthenticationHandlerImpl
 
 		try {
 			return Collections.singletonList(
-				LRLangTag.parse(
+				LowercaseLangTag.parse(
 					_language.getBCP47LangTag(locale), sendLocaleLowercase));
 		}
 		catch (LangTagException langTagException) {
