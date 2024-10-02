@@ -5,17 +5,21 @@
 
 package com.liferay.login.authentication.openid.connect.web.internal.portlet.action;
 
+import com.liferay.oauth.client.persistence.model.OAuthClientEntry;
 import com.liferay.oauth.client.persistence.service.OAuthClientEntryLocalService;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.portlet.bridges.mvc.MVCRenderCommand;
+import com.liferay.portal.kernel.portlet.url.builder.PortletURLBuilder;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.Portal;
 import com.liferay.portal.kernel.util.PortletKeys;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.security.sso.openid.connect.OpenIdConnect;
 import com.liferay.portal.security.sso.openid.connect.constants.OpenIdConnectWebKeys;
+
+import java.util.List;
 
 import javax.portlet.PortletException;
 import javax.portlet.RenderRequest;
@@ -64,11 +68,42 @@ public class OpenIdConnectLoginRequestMVCRenderCommand
 			return "/login.jsp";
 		}
 
-		httpServletRequest.setAttribute(
-			OpenIdConnectWebKeys.OAUTH_CLIENT_ENTRIES,
+		List<OAuthClientEntry> oauthClientEntries =
 			_oAuthClientEntryLocalService.
 				getAuthServerWellKnownURISuffixOAuthClientEntries(
-					themeDisplay.getCompanyId(), "openid-configuration"));
+					themeDisplay.getCompanyId(), "openid-configuration");
+
+		if (oauthClientEntries.size() == 1) {
+			String portletURLString = PortletURLBuilder.createActionURL(
+				renderResponse
+			).setActionName(
+				OpenIdConnectWebKeys.OPEN_ID_CONNECT_REQUEST_ACTION_NAME
+			).setParameter(
+				"oAuthClientEntryId",
+				oauthClientEntries.get(
+					0
+				).getOAuthClientEntryId()
+			).setParameter(
+				"saveLastPath", false
+			).buildString();
+
+			HttpServletResponse httpServletResponse =
+				_portal.getHttpServletResponse(renderResponse);
+
+			try {
+				httpServletResponse.sendRedirect(portletURLString);
+			}
+			catch (Exception exception) {
+				_log.error(
+					"Unable to redirect: " + exception.getMessage(), exception);
+
+				throw new PortletException(
+					"Unable to redirect " + _JSP_PATH, exception);
+			}
+		}
+
+		httpServletRequest.setAttribute(
+			OpenIdConnectWebKeys.OAUTH_CLIENT_ENTRIES, oauthClientEntries);
 
 		RequestDispatcher requestDispatcher =
 			_servletContext.getRequestDispatcher(_JSP_PATH);
