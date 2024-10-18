@@ -33,76 +33,86 @@ const test = mergeTests(
 
 const testWithIsolatedSite = mergeTests(test, isolatedSiteTest);
 
-test('Allows adding a Collection Display with a manual collection into another Collection Display with Recent Content', async ({
-	apiHelpers,
-	collectionsPage,
-	pageEditorPage,
-	pageManagementSite,
-}) => {
+test(
+	'Allows adding a Collection Display with a manual collection into another Collection Display with Recent Content',
+	{
+		tag: '@LPS-127024',
+	},
+	async ({
+		apiHelpers,
+		collectionsPage,
+		pageEditorPage,
+		pageManagementSite,
+	}) => {
 
-	// Create definition for a collection mapped to
-	// Recent Content provider with Bordered List style
+		// Create definition for a collection mapped to
+		// Recent Content provider with Bordered List style
 
-	const firstCollectionId = getRandomString();
+		const firstCollectionId = getRandomString();
 
-	const firstCollectionDefinition = getCollectionDefinition({
-		id: firstCollectionId,
-		listStyle: 'Bordered List (Collection Provider)',
-		provider: 'Recent Content',
-	});
+		const firstCollectionDefinition = getCollectionDefinition({
+			id: firstCollectionId,
+			listStyle: 'Bordered List (Collection Provider)',
+			provider: 'Recent Content',
+		});
 
-	// Create definition for a collection mapped to Animals collection
+		// Create definition for a collection mapped to Animals collection
 
-	const animalsClassPK = await collectionsPage.getCollectionClassPK(
-		ANIMALS_COLLECTION_NAME,
-		pageManagementSite.friendlyUrlPath
-	);
+		const animalsClassPK = await collectionsPage.getCollectionClassPK(
+			ANIMALS_COLLECTION_NAME,
+			pageManagementSite.friendlyUrlPath
+		);
 
-	const animalsCollection = getCollectionDefinition({
-		classPK: animalsClassPK,
-		id: getRandomString(),
-		listStyle: 'Bulleted List (Journal)',
-	});
+		const animalsCollection = getCollectionDefinition({
+			classPK: animalsClassPK,
+			id: getRandomString(),
+			listStyle: 'Bulleted List (Journal)',
+		});
 
-	// Create definition for another collection mapped to Recent Content provider
+		// Create definition for another collection mapped to Recent Content provider
 
-	const secondCollectionId = getRandomString();
+		const secondCollectionId = getRandomString();
 
-	const secondCollectionDefinition = getCollectionDefinition({
-		id: secondCollectionId,
-		pageElements: [animalsCollection],
-		provider: 'Recent Content',
-	});
+		const secondCollectionDefinition = getCollectionDefinition({
+			id: secondCollectionId,
+			pageElements: [animalsCollection],
+			provider: 'Recent Content',
+		});
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage({
-		pageDefinition: getPageDefinition([
-			firstCollectionDefinition,
-			secondCollectionDefinition,
-		]),
-		siteId: pageManagementSite.id,
-		title: getRandomString(),
-	});
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([
+				firstCollectionDefinition,
+				secondCollectionDefinition,
+			]),
+			siteId: pageManagementSite.id,
+			title: getRandomString(),
+		});
 
-	// Go to edit mode of page
+		// Go to edit mode of page
 
-	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
+		await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
-	// Calculate the number of recent contents
+		// Calculate the number of recent contents
 
-	const firstCollection = pageEditorPage.getFragment(firstCollectionId);
+		const firstCollection = pageEditorPage.getFragment(firstCollectionId);
 
-	const count = await firstCollection.locator('.list-group-item').count();
+		const count = await firstCollection.locator('.list-group-item').count();
 
-	// Expect second collection to display only Animal 01 and Animal 02 contents that times
+		// Expect second collection to display only Animal 01 and Animal 02 contents that times
 
-	const secondCollection = pageEditorPage.getFragment(secondCollectionId);
+		const secondCollection = pageEditorPage.getFragment(secondCollectionId);
 
-	await expect(secondCollection.locator('li')).toHaveCount(count * 2);
-	await expect(secondCollection.getByText('Animal 01')).toHaveCount(count);
-	await expect(secondCollection.getByText('Animal 02')).toHaveCount(count);
+		await expect(secondCollection.locator('li')).toHaveCount(count * 2);
+		await expect(secondCollection.getByText('Animal 01')).toHaveCount(
+			count
+		);
+		await expect(secondCollection.getByText('Animal 02')).toHaveCount(
+			count
+		);
 
-	await apiHelpers.jsonWebServicesLayout.deleteLayout(layout.id);
-});
+		await apiHelpers.jsonWebServicesLayout.deleteLayout(layout.id);
+	}
+);
 
 testWithIsolatedSite(
 	'Checks the error message when trying to drag a fragment to an unmapped collection',
@@ -296,155 +306,161 @@ test('Modifies inline text on all collection items', async ({
 	).toHaveCount(2);
 });
 
-test('Checks the different styles for the Display Collection', async ({
-	apiHelpers,
-	collectionsPage,
-	page,
-	pageEditorPage,
-	pageManagementSite,
-}) => {
-	const checkStyleDisplay = async () => {
-		const listItem = page.locator(
-			'.lfr-layout-structure-item-collection ul'
+test(
+	'Checks the different styles for the Display Collection',
+	{
+		tag: '@LPS-114727',
+	},
+	async ({
+		apiHelpers,
+		collectionsPage,
+		page,
+		pageEditorPage,
+		pageManagementSite,
+	}) => {
+		const checkStyleDisplay = async () => {
+			const listItem = page.locator(
+				'.lfr-layout-structure-item-collection ul'
+			);
+
+			// Check the Bordered List style
+
+			await expect(listItem.first()).toHaveClass('list-group');
+			await expect(listItem.first().locator('li').first()).toHaveClass(
+				'list-group-item'
+			);
+
+			// Check the Bulleted List style
+
+			await expect(listItem.nth(1)).toHaveAttribute('class', '');
+			await expect(listItem.nth(1).locator('li').first()).toHaveAttribute(
+				'class',
+				''
+			);
+
+			// Check the Inline List style
+
+			await expect(listItem.nth(2)).toHaveClass('d-flex list-inline');
+			await expect(listItem.nth(2).locator('li').first()).toHaveClass(
+				'flex-grow-1'
+			);
+
+			// Check the Numbered List style
+
+			const orderedListItem = page.locator(
+				'.lfr-layout-structure-item-collection ol'
+			);
+
+			await expect(orderedListItem).not.toHaveAttribute('class');
+			await expect(
+				orderedListItem.locator('li').first()
+			).not.toHaveAttribute('class');
+
+			// Check the Unstyled List style
+
+			await expect(listItem.nth(3)).toHaveClass('list-unstyled');
+			await expect(listItem.nth(3).locator('li').first()).toHaveAttribute(
+				'class',
+				''
+			);
+		};
+
+		// Create several definitions with different Style Display
+
+		const animalsClassPK = await collectionsPage.getCollectionClassPK(
+			ANIMALS_COLLECTION_NAME,
+			pageManagementSite.friendlyUrlPath
 		);
 
-		// Check the Bordered List style
+		const borderedListCollection = getCollectionDefinition({
+			classPK: animalsClassPK,
+			id: getRandomString(),
+			listStyle: 'Bordered List (Collection Provider)',
+			pageElements: [
+				getFragmentDefinition({
+					id: getRandomString(),
+					key: 'BASIC_COMPONENT-heading',
+				}),
+			],
+		});
 
-		await expect(listItem.first()).toHaveClass('list-group');
-		await expect(listItem.first().locator('li').first()).toHaveClass(
-			'list-group-item'
+		const bulletedListCollection = getCollectionDefinition({
+			classPK: animalsClassPK,
+			id: getRandomString(),
+			listStyle: 'Bulleted List (Collection Provider)',
+			pageElements: [
+				getFragmentDefinition({
+					id: getRandomString(),
+					key: 'BASIC_COMPONENT-heading',
+				}),
+			],
+		});
+
+		const inlineListCollection = getCollectionDefinition({
+			classPK: animalsClassPK,
+			id: getRandomString(),
+			listStyle: 'Inline List',
+			pageElements: [
+				getFragmentDefinition({
+					id: getRandomString(),
+					key: 'BASIC_COMPONENT-heading',
+				}),
+			],
+		});
+
+		const numberedListCollection = getCollectionDefinition({
+			classPK: animalsClassPK,
+			id: getRandomString(),
+			listStyle: 'Numbered List',
+			pageElements: [
+				getFragmentDefinition({
+					id: getRandomString(),
+					key: 'BASIC_COMPONENT-heading',
+				}),
+			],
+		});
+
+		const unstyledListCollection = getCollectionDefinition({
+			classPK: animalsClassPK,
+			id: getRandomString(),
+			listStyle: 'Unstyled List',
+			pageElements: [
+				getFragmentDefinition({
+					id: getRandomString(),
+					key: 'BASIC_COMPONENT-heading',
+				}),
+			],
+		});
+
+		// Create a content page and go to edit mode
+
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([
+				borderedListCollection,
+				bulletedListCollection,
+				inlineListCollection,
+				numberedListCollection,
+				unstyledListCollection,
+			]),
+			siteId: pageManagementSite.id,
+			title: getRandomString(),
+		});
+
+		// Check the Style Display in edit mode
+
+		await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
+
+		await checkStyleDisplay();
+
+		// Check the Style Display in view mode
+
+		await page.goto(
+			`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
 		);
 
-		// Check the Bulleted List style
-
-		await expect(listItem.nth(1)).toHaveAttribute('class', '');
-		await expect(listItem.nth(1).locator('li').first()).toHaveAttribute(
-			'class',
-			''
-		);
-
-		// Check the Inline List style
-
-		await expect(listItem.nth(2)).toHaveClass('d-flex list-inline');
-		await expect(listItem.nth(2).locator('li').first()).toHaveClass(
-			'flex-grow-1'
-		);
-
-		// Check the Numbered List style
-
-		const orderedListItem = page.locator(
-			'.lfr-layout-structure-item-collection ol'
-		);
-
-		await expect(orderedListItem).not.toHaveAttribute('class');
-		await expect(orderedListItem.locator('li').first()).not.toHaveAttribute(
-			'class'
-		);
-
-		// Check the Unstyled List style
-
-		await expect(listItem.nth(3)).toHaveClass('list-unstyled');
-		await expect(listItem.nth(3).locator('li').first()).toHaveAttribute(
-			'class',
-			''
-		);
-	};
-
-	// Create several definitions with different Style Display
-
-	const animalsClassPK = await collectionsPage.getCollectionClassPK(
-		ANIMALS_COLLECTION_NAME,
-		pageManagementSite.friendlyUrlPath
-	);
-
-	const borderedListCollection = getCollectionDefinition({
-		classPK: animalsClassPK,
-		id: getRandomString(),
-		listStyle: 'Bordered List (Collection Provider)',
-		pageElements: [
-			getFragmentDefinition({
-				id: getRandomString(),
-				key: 'BASIC_COMPONENT-heading',
-			}),
-		],
-	});
-
-	const bulletedListCollection = getCollectionDefinition({
-		classPK: animalsClassPK,
-		id: getRandomString(),
-		listStyle: 'Bulleted List (Collection Provider)',
-		pageElements: [
-			getFragmentDefinition({
-				id: getRandomString(),
-				key: 'BASIC_COMPONENT-heading',
-			}),
-		],
-	});
-
-	const inlineListCollection = getCollectionDefinition({
-		classPK: animalsClassPK,
-		id: getRandomString(),
-		listStyle: 'Inline List',
-		pageElements: [
-			getFragmentDefinition({
-				id: getRandomString(),
-				key: 'BASIC_COMPONENT-heading',
-			}),
-		],
-	});
-
-	const numberedListCollection = getCollectionDefinition({
-		classPK: animalsClassPK,
-		id: getRandomString(),
-		listStyle: 'Numbered List',
-		pageElements: [
-			getFragmentDefinition({
-				id: getRandomString(),
-				key: 'BASIC_COMPONENT-heading',
-			}),
-		],
-	});
-
-	const unstyledListCollection = getCollectionDefinition({
-		classPK: animalsClassPK,
-		id: getRandomString(),
-		listStyle: 'Unstyled List',
-		pageElements: [
-			getFragmentDefinition({
-				id: getRandomString(),
-				key: 'BASIC_COMPONENT-heading',
-			}),
-		],
-	});
-
-	// Create a content page and go to edit mode
-
-	const layout = await apiHelpers.headlessDelivery.createSitePage({
-		pageDefinition: getPageDefinition([
-			borderedListCollection,
-			bulletedListCollection,
-			inlineListCollection,
-			numberedListCollection,
-			unstyledListCollection,
-		]),
-		siteId: pageManagementSite.id,
-		title: getRandomString(),
-	});
-
-	// Check the Style Display in edit mode
-
-	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
-
-	await checkStyleDisplay();
-
-	// Check the Style Display in view mode
-
-	await page.goto(
-		`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
-	);
-
-	await checkStyleDisplay();
-});
+		await checkStyleDisplay();
+	}
+);
 
 test('Checks that fragment ids used within a display collection are not repeated even if they are nested elements', async ({
 	apiHelpers,
@@ -548,107 +564,113 @@ test('Checks that fragment ids used within a display collection are not repeated
 	await checkNonRepeatedFragmentIds();
 });
 
-test('Displays correct layout in other viewports', async ({
-	apiHelpers,
-	collectionsPage,
-	page,
-	pageEditorPage,
-	pageManagementSite,
-}) => {
+test(
+	'Displays correct layout in other viewports',
+	{
+		tag: '@LPS-111561',
+	},
+	async ({
+		apiHelpers,
+		collectionsPage,
+		page,
+		pageEditorPage,
+		pageManagementSite,
+	}) => {
 
-	// Create definition for a collection mapped to Animals collection
+		// Create definition for a collection mapped to Animals collection
 
-	const animalsClassPK = await collectionsPage.getCollectionClassPK(
-		ANIMALS_COLLECTION_NAME,
-		pageManagementSite.friendlyUrlPath
-	);
+		const animalsClassPK = await collectionsPage.getCollectionClassPK(
+			ANIMALS_COLLECTION_NAME,
+			pageManagementSite.friendlyUrlPath
+		);
 
-	const headingId = getRandomString();
+		const headingId = getRandomString();
 
-	const collectionId = getRandomString();
+		const collectionId = getRandomString();
 
-	const collectionDefinition = getCollectionDefinition({
-		classPK: animalsClassPK,
-		id: collectionId,
-		pageElements: [
-			getFragmentDefinition({
-				id: headingId,
-				key: 'BASIC_COMPONENT-heading',
-			}),
-		],
-	});
+		const collectionDefinition = getCollectionDefinition({
+			classPK: animalsClassPK,
+			id: collectionId,
+			pageElements: [
+				getFragmentDefinition({
+					id: headingId,
+					key: 'BASIC_COMPONENT-heading',
+				}),
+			],
+		});
 
-	// Create a content page and go to edit mode
+		// Create a content page and go to edit mode
 
-	const layout = await apiHelpers.headlessDelivery.createSitePage({
-		pageDefinition: getPageDefinition([collectionDefinition]),
-		siteId: pageManagementSite.id,
-		title: getRandomString(),
-	});
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([collectionDefinition]),
+			siteId: pageManagementSite.id,
+			title: getRandomString(),
+		});
 
-	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
+		await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
 
-	// Change layout to 4 columns in Desktop
+		// Change layout to 4 columns in Desktop
 
-	await pageEditorPage.changeFragmentConfiguration({
-		fieldLabel: 'Layout',
-		fragmentId: collectionId,
-		tab: 'General',
-		value: '4 Columns',
-	});
+		await pageEditorPage.changeFragmentConfiguration({
+			fieldLabel: 'Layout',
+			fragmentId: collectionId,
+			tab: 'General',
+			value: '4 Columns',
+		});
 
-	await pageEditorPage.publishPage();
+		await pageEditorPage.publishPage();
 
-	// Go to view mode and check correct layout is displayed on each viewport
+		// Go to view mode and check correct layout is displayed on each viewport
 
-	await page.goto(
-		`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
-	);
+		await page.goto(
+			`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
+		);
 
-	const row = page.locator('.lfr-layout-structure-item-collection row');
+		const row = page.locator('.lfr-layout-structure-item-collection row');
 
-	for (const col of await row.locator('.col').all()) {
-		await expect(col).toHaveClass(/col-lg-3/);
-		await expect(col).toHaveClass(/col-md-12/);
-		await expect(col).toHaveClass(/col-sm-12/);
+		for (const col of await row.locator('.col').all()) {
+			await expect(col).toHaveClass(/col-lg-3/);
+			await expect(col).toHaveClass(/col-md-12/);
+			await expect(col).toHaveClass(/col-sm-12/);
+		}
+
+		// Edit the page again and change layout to 2 columns in Tablet and Mobile
+
+		await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
+
+		await pageEditorPage.switchViewport('Tablet');
+
+		await pageEditorPage.changeFragmentConfiguration({
+			fieldLabel: 'Layout',
+			fragmentId: collectionId,
+			isDesktop: false,
+			tab: 'General',
+			value: '2 Columns',
+		});
+
+		await pageEditorPage.switchViewport('Portrait Phone');
+
+		await pageEditorPage.changeFragmentConfiguration({
+			fieldLabel: 'Layout',
+			fragmentId: collectionId,
+			isDesktop: false,
+			tab: 'General',
+			value: '2 Columns',
+		});
+
+		// Go to view mode again and check correct layout is displayed on each viewport
+
+		await page.goto(
+			`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
+		);
+
+		for (const col of await row.locator('.col').all()) {
+			await expect(col).toHaveClass(/col-lg-3/);
+			await expect(col).toHaveClass(/col-md-6/);
+			await expect(col).toHaveClass(/col-sm-6/);
+		}
 	}
-
-	// Edit the page again and change layout to 2 columns in Tablet and Mobile
-
-	await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
-
-	await pageEditorPage.switchViewport('Tablet');
-
-	await pageEditorPage.changeFragmentConfiguration({
-		fieldLabel: 'Layout',
-		fragmentId: collectionId,
-		isDesktop: false,
-		tab: 'General',
-		value: '2 Columns',
-	});
-
-	await pageEditorPage.switchViewport('Portrait Phone');
-
-	await pageEditorPage.changeFragmentConfiguration({
-		fieldLabel: 'Layout',
-		fragmentId: collectionId,
-		isDesktop: false,
-		tab: 'General',
-		value: '2 Columns',
-	});
-
-	// Go to view mode again and check correct layout is displayed on each viewport
-
-	await page.goto(
-		`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
-	);
-
-	for (const col of await row.locator('.col').all()) {
-		await expect(col).toHaveClass(/col-lg-3/);
-		await expect(col).toHaveClass(/col-md-6/);
-		await expect(col).toHaveClass(/col-sm-6/);
-	}
-});
+);
 
 test('Activate the first element when a fragment is added to a Collection Display and activates the Collection Display when the fragment is deleted', async ({
 	apiHelpers,
@@ -699,3 +721,143 @@ test('Activate the first element when a fragment is added to a Collection Displa
 
 	expect(await pageEditorPage.isActive(collectionDisplayId)).toBe(true);
 });
+
+test(
+	'Content display title view in collection display',
+	{
+		tag: '@LPS-114727',
+	},
+	async ({apiHelpers, page, pageEditorPage, pageManagementSite}) => {
+
+		// Create a page with a collection display and go to edit mode
+
+		const collectionDefinition = getCollectionDefinition({
+			id: getRandomString(),
+			pageElements: [
+				getFragmentDefinition({
+					id: getRandomString(),
+					key: 'com.liferay.fragment.internal.renderer.ContentObjectFragmentRenderer',
+				}),
+			],
+			provider: 'Highest Rated Assets',
+		});
+
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([collectionDefinition]),
+			siteId: pageManagementSite.id,
+			title: getRandomString(),
+		});
+
+		// Assert items in edit mode
+
+		await pageEditorPage.goto(layout, pageManagementSite.friendlyUrlPath);
+
+		await expect(
+			page.getByText('Animal 01 - Dogs and Cats categories')
+		).toBeVisible();
+
+		await expect(
+			page.getByText('Animal 02 - Dogs category')
+		).toBeAttached();
+
+		// Assert items in view mode
+
+		await page.goto(
+			`/web${pageManagementSite.friendlyUrlPath}${layout.friendlyUrlPath}`
+		);
+
+		await expect(
+			page.getByText('Animal 01 - Dogs and Cats categories')
+		).toBeVisible();
+
+		await expect(
+			page.getByText('Animal 02 - Dogs category')
+		).toBeAttached();
+	}
+);
+
+testWithIsolatedSite(
+	'View collection display alert',
+	{
+		tag: '@LPS-160243',
+	},
+	async ({apiHelpers, page, pageEditorPage, site}) => {
+
+		// Create a page with a collection display and go to edit mode
+
+		const collectionId = getRandomString();
+
+		const collectionDefinition = getCollectionDefinition({
+			id: collectionId,
+			pageElements: [
+				getFragmentDefinition({
+					id: getRandomString(),
+					key: 'BASIC_COMPONENT-heading',
+				}),
+			],
+			provider: 'Highest Rated Assets',
+		});
+
+		const layout = await apiHelpers.headlessDelivery.createSitePage({
+			pageDefinition: getPageDefinition([collectionDefinition]),
+			siteId: site.id,
+			title: getRandomString(),
+		});
+
+		// Assert alert message in edit mode
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		await expect(
+			page.getByText(
+				'The collection is empty. To display your items, add them to the collection or choose a different collection.'
+			)
+		).toBeVisible();
+
+		await pageEditorPage.switchLanguage('es-ES');
+
+		await pageEditorPage.changeFragmentConfiguration({
+			fieldLabel: 'Empty Collection Alert',
+			fragmentId: collectionId,
+			tab: 'General',
+			value: 'No se encontraron resultados',
+		});
+
+		await pageEditorPage.publishPage();
+
+		// Assert alert message in view mode
+
+		await page.goto(
+			`/es/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`
+		);
+
+		await expect(
+			page.getByText('No se encontraron resultados')
+		).toBeVisible();
+
+		await page.goto(
+			`/en/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`
+		);
+
+		await expect(page.getByText('No Results Found')).toBeVisible();
+
+		// Disable alert message in edit mode
+
+		await pageEditorPage.goto(layout, site.friendlyUrlPath);
+
+		await pageEditorPage.changeFragmentConfiguration({
+			fieldLabel: 'Show Empty Collection Alert',
+			fragmentId: collectionId,
+			tab: 'General',
+			value: false,
+		});
+
+		await pageEditorPage.publishPage();
+
+		// Assert alert message in view mode
+
+		await page.goto(`/web${site.friendlyUrlPath}${layout.friendlyUrlPath}`);
+
+		await expect(page.getByText('No Results Found')).not.toBeVisible();
+	}
+);

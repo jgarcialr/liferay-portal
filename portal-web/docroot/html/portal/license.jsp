@@ -642,7 +642,7 @@ dateFormatDateTime.setTimeZone(timeZone);
 						<liferay-ui:message key="product" />
 					</td>
 					<td>
-						<select name="productEntryName" onChange="if (this.value == "basic-cluster") {document.getElementById("maxServers").style.display = "";} else {document.getElementById("maxServers").style.display = "none";}">
+						<select name="productEntryName">
 							<option value=""></option>
 
 							<%
@@ -670,6 +670,17 @@ dateFormatDateTime.setTimeZone(timeZone);
 							%>
 
 						</select>
+
+						<aui:script position="inline">
+							document.querySelector('[name="productEntryName"]').onchange = function() {
+								if (this.value == "basic-cluster") {
+									document.getElementById("maxServers").style.display = "";
+								}
+								else {
+									document.getElementById("maxServers").style.display = "none";
+								}
+							}
+						</aui:script>
 					</td>
 				</tr>
 				<tr id="maxServers" style="display: none;">
@@ -706,7 +717,17 @@ dateFormatDateTime.setTimeZone(timeZone);
 			<c:when test="<%= orderProducts != null %>">
 				<input class="btn btn-secondary" type="submit" value="<liferay-ui:message key="register" />" />
 
-				<input onClick="location.href='<%= HtmlUtil.escapeJS(themeDisplay.getURLCurrent()) %>';" type="button" value="<liferay-ui:message key="cancel" />" />
+				<%
+				String id = StringUtil.randomId();
+				%>
+
+				<input id="<%= id %>" type="button" value="<liferay-ui:message key="cancel" />" />
+
+				<aui:script position="inline">
+					document.getElementById('<%= id %>').onclick = function() {
+						location.href='<%= HtmlUtil.escapeJS(themeDisplay.getURLCurrent()) %>';
+					}
+				</aui:script>
 			</c:when>
 			<c:otherwise>
 				<input class="btn btn-secondary" type="submit" value="<liferay-ui:message key="query" />" />

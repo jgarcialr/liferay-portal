@@ -6,6 +6,7 @@
 package com.liferay.object.service.impl;
 
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
+import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
@@ -22,7 +23,9 @@ import com.liferay.object.exception.ObjectRelationshipSystemException;
 import com.liferay.object.exception.ObjectRelationshipTypeException;
 import com.liferay.object.internal.dao.db.ObjectDBManagerUtil;
 import com.liferay.object.internal.info.collection.provider.RelatedInfoCollectionProviderFactory;
+import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
+import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
 import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectFolderItem;
@@ -37,6 +40,7 @@ import com.liferay.object.service.ObjectFieldLocalService;
 import com.liferay.object.service.ObjectFieldSettingLocalService;
 import com.liferay.object.service.ObjectFolderItemLocalService;
 import com.liferay.object.service.base.ObjectRelationshipLocalServiceBaseImpl;
+import com.liferay.object.service.persistence.ObjectActionPersistence;
 import com.liferay.object.service.persistence.ObjectDefinitionPersistence;
 import com.liferay.object.service.persistence.ObjectFieldPersistence;
 import com.liferay.object.service.persistence.ObjectLayoutTabPersistence;
@@ -53,11 +57,17 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.petra.string.StringPool;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.dao.jdbc.CurrentConnection;
+import com.liferay.portal.kernel.dao.orm.ActionableDynamicQuery;
 import com.liferay.portal.kernel.dao.orm.FinderCacheUtil;
+import com.liferay.portal.kernel.dao.orm.RestrictionsFactoryUtil;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.feature.flag.FeatureFlagManagerUtil;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
+import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.ResourceAction;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.ResourcePermission;
 import com.liferay.portal.kernel.model.SystemEventConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.module.service.Snapshot;
@@ -66,6 +76,8 @@ import com.liferay.portal.kernel.search.IndexableType;
 import com.liferay.portal.kernel.search.Indexer;
 import com.liferay.portal.kernel.search.IndexerRegistryUtil;
 import com.liferay.portal.kernel.security.RandomUtil;
+import com.liferay.portal.kernel.service.ResourceActionLocalService;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.service.UserLocalService;
 import com.liferay.portal.kernel.systemevent.SystemEvent;
@@ -83,6 +95,7 @@ import java.io.Serializable;
 
 import java.sql.Connection;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -964,6 +977,12 @@ public class ObjectRelationshipLocalServiceImpl
 
 			_bindObjectDefinitions(objectRelationship);
 		}
+		else if (!edge && objectRelationship.isEdge() &&
+				 FeatureFlagManagerUtil.isEnabled(
+					 objectRelationship.getCompanyId(), "LPS-187142")) {
+
+			_unbindObjectDefinitions(objectRelationship);
+		}
 
 		return objectRelationship;
 	}
@@ -1343,6 +1362,97 @@ public class ObjectRelationshipLocalServiceImpl
 		}
 	}
 
+	private void _copyResourcePermissions(
+			List<ResourceAction> sourceResourceActions,
+			List<ResourcePermission> sourceResourcePermissions,
+			String targetName, String targetPrimKey)
+		throws PortalException {
+
+		for (ResourcePermission sourceResourcePermission :
+				sourceResourcePermissions) {
+
+			List<String> targetResourceActionIds = new ArrayList<>();
+
+			for (ResourceAction sourceResourceAction : sourceResourceActions) {
+				long bitwiseValue = sourceResourceAction.getBitwiseValue();
+
+				if ((sourceResourcePermission.getActionIds() & bitwiseValue) !=
+						bitwiseValue) {
+
+					continue;
+				}
+
+				targetResourceActionIds.add(sourceResourceAction.getActionId());
+			}
+
+			_resourcePermissionLocalService.setResourcePermissions(
+				sourceResourcePermission.getCompanyId(), targetName,
+				sourceResourcePermission.getScope(), targetPrimKey,
+				sourceResourcePermission.getRoleId(),
+				targetResourceActionIds.toArray(new String[0]));
+		}
+	}
+
+	private void _copyResourcePermissions(
+			long companyId, String sourceName, String targetName)
+		throws PortalException {
+
+		List<ResourceAction> resourceActions =
+			_resourceActionLocalService.getResourceActions(sourceName);
+
+		_copyResourcePermissions(
+			resourceActions,
+			_resourcePermissionLocalService.getResourcePermissions(
+				companyId, sourceName, ResourceConstants.SCOPE_COMPANY,
+				String.valueOf(companyId)),
+			targetName, String.valueOf(companyId));
+		_copyResourcePermissions(
+			resourceActions,
+			_resourcePermissionLocalService.getResourcePermissions(
+				companyId, sourceName, ResourceConstants.SCOPE_GROUP_TEMPLATE,
+				String.valueOf(GroupConstants.DEFAULT_PARENT_GROUP_ID)),
+			targetName, String.valueOf(GroupConstants.DEFAULT_PARENT_GROUP_ID));
+	}
+
+	private void _copyResourcePermissions(
+			ObjectDefinition objectDefinition1,
+			ObjectDefinition objectDefinition2)
+		throws PortalException {
+
+		if (!objectDefinition1.isApproved() ||
+			!objectDefinition2.isApproved()) {
+
+			return;
+		}
+
+		List<ResourceAction> resourceActions =
+			_resourceActionLocalService.getResourceActions(
+				objectDefinition1.getClassName());
+
+		_performActions(
+			objectDefinition2.getObjectDefinitionId(), true,
+			(ObjectEntry objectEntry) -> _copyResourcePermissions(
+				resourceActions,
+				_resourcePermissionLocalService.getResourcePermissions(
+					objectDefinition1.getCompanyId(),
+					objectDefinition1.getClassName(),
+					ResourceConstants.SCOPE_INDIVIDUAL,
+					String.valueOf(objectEntry.getRootObjectEntryId())),
+				objectDefinition2.getClassName(),
+				String.valueOf(objectEntry.getObjectEntryId())));
+
+		_copyResourcePermissions(
+			objectDefinition1.getCompanyId(), objectDefinition1.getClassName(),
+			objectDefinition2.getClassName());
+		_copyResourcePermissions(
+			objectDefinition1.getCompanyId(), objectDefinition1.getPortletId(),
+			objectDefinition2.getPortletId());
+		_copyResourcePermissions(
+			objectDefinition1.getCompanyId(),
+			objectDefinition1.getResourceName(),
+			objectDefinition2.getResourceName());
+	}
+
 	private void _deleteObjectFields(
 			long objectDefinitionId, ObjectRelationship objectRelationship)
 		throws PortalException {
@@ -1364,6 +1474,32 @@ public class ObjectRelationshipLocalServiceImpl
 					objectField.getObjectFieldId());
 			}
 		}
+	}
+
+	private void _deployObjectDefinition(ObjectDefinition objectDefinition)
+		throws PortalException {
+
+		if (!objectDefinition.isApproved()) {
+			return;
+		}
+
+		ObjectDefinitionLocalService objectDefinitionLocalService =
+			_objectDefinitionLocalServiceSnapshot.get();
+
+		objectDefinitionLocalService.deployObjectDefinition(objectDefinition);
+	}
+
+	private long _getRootObjectDefinitionId(ObjectDefinition objectDefinition)
+		throws PortalException {
+
+		long count = objectRelationshipPersistence.countByODI1_E(
+			objectDefinition.getObjectDefinitionId(), true);
+
+		if (count == 0) {
+			return 0;
+		}
+
+		return objectDefinition.getObjectDefinitionId();
 	}
 
 	private String _getServiceRegistrationKey(
@@ -1417,6 +1553,24 @@ public class ObjectRelationshipLocalServiceImpl
 		return false;
 	}
 
+	private void _performActions(
+			long objectDefinitionId, boolean parallel,
+			ActionableDynamicQuery.PerformActionMethod<?> performActionMethod)
+		throws PortalException {
+
+		ActionableDynamicQuery actionableDynamicQuery =
+			_objectEntryLocalService.getActionableDynamicQuery();
+
+		actionableDynamicQuery.setAddCriteriaMethod(
+			dynamicQuery -> dynamicQuery.add(
+				RestrictionsFactoryUtil.eq(
+					"objectDefinitionId", objectDefinitionId)));
+		actionableDynamicQuery.setParallel(parallel);
+		actionableDynamicQuery.setPerformActionMethod(performActionMethod);
+
+		actionableDynamicQuery.performActions();
+	}
+
 	private void _registerRelatedInfoItemCollectionProvider(
 			ObjectDefinition objectDefinition1,
 			ObjectDefinition objectDefinition2,
@@ -1449,6 +1603,164 @@ public class ObjectRelationshipLocalServiceImpl
 				).build()));
 	}
 
+	private void _unbindObjectDefinitions(ObjectRelationship objectRelationship)
+		throws PortalException {
+
+		objectRelationship.setEdge(false);
+
+		objectRelationship =
+			objectRelationshipLocalService.updateObjectRelationship(
+				objectRelationship);
+
+		ObjectDefinition objectDefinition1 =
+			_objectDefinitionPersistence.findByPrimaryKey(
+				objectRelationship.getObjectDefinitionId1());
+
+		if (objectDefinition1.isRootDescendantNode()) {
+			objectDefinition1 = _objectDefinitionPersistence.findByPrimaryKey(
+				objectDefinition1.getRootObjectDefinitionId());
+		}
+
+		long oldRootObjectDefinitionId1 =
+			objectDefinition1.getRootObjectDefinitionId();
+		long newRootObjectDefinitionId1 = _getRootObjectDefinitionId(
+			objectDefinition1);
+
+		_updateRootObjectDefinitionId(
+			objectDefinition1, oldRootObjectDefinitionId1,
+			newRootObjectDefinitionId1);
+
+		_updateObjectEntries(
+			objectDefinition1, oldRootObjectDefinitionId1,
+			newRootObjectDefinitionId1);
+
+		if (newRootObjectDefinitionId1 == 0) {
+			for (ObjectAction objectAction :
+					_objectActionPersistence.findByO_A_OATK(
+						objectDefinition1.getObjectDefinitionId(), true,
+						ObjectActionTriggerConstants.
+							KEY_ON_AFTER_ROOT_UPDATE)) {
+
+				objectAction.setActive(false);
+
+				_objectActionPersistence.update(objectAction);
+			}
+		}
+
+		ObjectDefinition objectDefinition2 =
+			_objectDefinitionPersistence.findByPrimaryKey(
+				objectRelationship.getObjectDefinitionId2());
+
+		objectDefinition2.setScope(objectDefinition1.getScope());
+
+		long oldRootObjectDefinitionId2 =
+			objectDefinition2.getRootObjectDefinitionId();
+		long newRootObjectDefinitionId2 = _getRootObjectDefinitionId(
+			objectDefinition2);
+
+		_updateRootObjectDefinitionId(
+			objectDefinition2, oldRootObjectDefinitionId2,
+			newRootObjectDefinitionId2);
+
+		_copyResourcePermissions(objectDefinition1, objectDefinition2);
+
+		_updateObjectEntries(
+			objectDefinition2, oldRootObjectDefinitionId2,
+			newRootObjectDefinitionId2);
+
+		_updateObjectDefinitionTree(
+			objectDefinition2, oldRootObjectDefinitionId2,
+			newRootObjectDefinitionId2);
+	}
+
+	private void _updateObjectDefinitionTree(
+			ObjectDefinition objectDefinition1, long oldRootObjectDefinitionId,
+			long newRootObjectDefinitionId)
+		throws PortalException {
+
+		if (newRootObjectDefinitionId == 0) {
+			return;
+		}
+
+		for (ObjectRelationship objectRelationship :
+				objectRelationshipLocalService.getObjectRelationships(
+					objectDefinition1.getObjectDefinitionId(), true)) {
+
+			ObjectDefinition objectDefinition2 =
+				_objectDefinitionPersistence.findByPrimaryKey(
+					objectRelationship.getObjectDefinitionId2());
+
+			if (oldRootObjectDefinitionId !=
+					objectDefinition2.getRootObjectDefinitionId()) {
+
+				continue;
+			}
+
+			_updateRootObjectDefinitionId(
+				objectDefinition2, oldRootObjectDefinitionId,
+				newRootObjectDefinitionId);
+
+			if (objectDefinition2.isApproved()) {
+				ObjectField objectField =
+					_objectFieldPersistence.findByPrimaryKey(
+						objectRelationship.getObjectFieldId2());
+
+				_performActions(
+					objectDefinition1.getObjectDefinitionId(), true,
+					(ObjectEntry objectEntry) -> runSQL(
+						StringBundler.concat(
+							"update ObjectEntry set rootObjectEntryId = ",
+							objectEntry.getRootObjectEntryId(),
+							" where objectEntryId in (select ",
+							objectDefinition2.getPKObjectFieldDBColumnName(),
+							" from ", objectField.getDBTableName(), " where ",
+							objectField.getDBColumnName(), " = ",
+							objectEntry.getObjectEntryId(), ")")));
+
+				if (objectDefinition2.isEnableIndexSearch()) {
+					Indexer<ObjectEntry> indexer =
+						IndexerRegistryUtil.getIndexer(
+							objectDefinition2.getClassName());
+
+					_performActions(
+						objectDefinition2.getObjectDefinitionId(), true,
+						(ObjectEntry objectEntry) -> indexer.reindex(
+							objectEntry));
+				}
+			}
+
+			_updateObjectDefinitionTree(
+				objectDefinition2, oldRootObjectDefinitionId,
+				newRootObjectDefinitionId);
+		}
+	}
+
+	private void _updateObjectEntries(
+			ObjectDefinition objectDefinition, long oldRootObjectDefinitionId,
+			long newRootObjectDefinitionId)
+		throws PortalException {
+
+		if (!objectDefinition.isApproved() ||
+			(oldRootObjectDefinitionId == newRootObjectDefinitionId)) {
+
+			return;
+		}
+
+		_performActions(
+			objectDefinition.getObjectDefinitionId(), false,
+			(ObjectEntry objectEntry) -> {
+				if (newRootObjectDefinitionId == 0) {
+					objectEntry.setRootObjectEntryId(0);
+				}
+				else {
+					objectEntry.setRootObjectEntryId(
+						objectEntry.getObjectEntryId());
+				}
+
+				_objectEntryLocalService.updateObjectEntry(objectEntry);
+			});
+	}
+
 	private ObjectRelationship _updateObjectRelationship(
 		String externalReferenceCode, long parameterObjectFieldId,
 		String deletionType, Map<Locale, String> labelMap,
@@ -1460,6 +1772,29 @@ public class ObjectRelationshipLocalServiceImpl
 		objectRelationship.setLabelMap(labelMap);
 
 		return objectRelationshipPersistence.update(objectRelationship);
+	}
+
+	private void _updateRootObjectDefinitionId(
+			ObjectDefinition objectDefinition, long oldRootObjectDefinitionId,
+			long newRootObjectDefinitionId)
+		throws PortalException {
+
+		if (oldRootObjectDefinitionId == newRootObjectDefinitionId) {
+			_deployObjectDefinition(objectDefinition);
+
+			return;
+		}
+
+		String previousRESTContextPath = objectDefinition.getRESTContextPath();
+
+		objectDefinition.setRootObjectDefinitionId(newRootObjectDefinitionId);
+
+		objectDefinition = _objectDefinitionPersistence.update(
+			objectDefinition);
+
+		objectDefinition.setPreviousRESTContextPath(previousRESTContextPath);
+
+		_deployObjectDefinition(objectDefinition);
 	}
 
 	private void _validateDeletionType(
@@ -1850,6 +2185,9 @@ public class ObjectRelationshipLocalServiceImpl
 	private CurrentConnection _currentConnection;
 
 	@Reference
+	private ObjectActionPersistence _objectActionPersistence;
+
+	@Reference
 	private ObjectDefinitionPersistence _objectDefinitionPersistence;
 
 	@Reference
@@ -1873,6 +2211,12 @@ public class ObjectRelationshipLocalServiceImpl
 	@Reference
 	private RelatedInfoCollectionProviderFactory
 		_relatedInfoCollectionProviderFactory;
+
+	@Reference
+	private ResourceActionLocalService _resourceActionLocalService;
+
+	@Reference
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 
 	private final Map<String, ServiceRegistration<?>> _serviceRegistrations =
 		new ConcurrentHashMap<>();

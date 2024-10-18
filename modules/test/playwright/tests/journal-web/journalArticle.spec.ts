@@ -71,7 +71,7 @@ const keepTitlesUntranslated = mergeTests(baseTest);
 const prefixUrlTest = mergeTests(
 	baseTest,
 	featureFlagsTest({
-		'LPS-203351': true,
+		'LPD-11147': true,
 	})
 );
 
@@ -94,12 +94,10 @@ baseTest(
 		await page.goto(`/fr/`);
 		await journalEditArticlePage.createBasicArticleWithFriendlyURL(
 			site,
-			page,
 			'Contenu web basique'
 		);
 		await journalEditArticlePage.createBasicArticleWithFriendlyURL(
 			site,
-			page,
 			'Contenu web basique'
 		);
 
@@ -107,6 +105,29 @@ baseTest(
 			page
 				.locator('#ToastAlertContainer')
 				.getByText('test', {exact: true})
+		).toBeVisible();
+	}
+);
+
+baseTest(
+	'Check error message on invalid friendly URL',
+	{
+		tag: '@LPD-38754',
+	},
+	async ({journalEditArticlePage, site}) => {
+		await journalEditArticlePage.goto({siteUrl: site.friendlyUrlPath});
+
+		const title = getRandomString();
+
+		await journalEditArticlePage.fillTitle(title);
+		await journalEditArticlePage.fillFriendlyURL(title + '/' || 'test');
+		await journalEditArticlePage.publishButton.waitFor();
+		await journalEditArticlePage.publishButton.click();
+
+		await expect(
+			journalEditArticlePage.alertErrorMessage.getByText(
+				'Please enter a friendly URL that does not end with a slash'
+			)
 		).toBeVisible();
 	}
 );
@@ -635,6 +656,42 @@ baseTest(
 		await page.getByRole('button', {name: 'Delete'}).click();
 
 		await waitForAlert(page);
+	}
+);
+baseTest(
+	'It ensures that translate side by side shows the duplicate fields',
+	{
+		tag: '@LPS-142169',
+	},
+	async ({apiHelpers, journalEditArticlePage, journalPage, page, site}) => {
+		const localizableFieldName = 'Text5678';
+		const structureName = 'Structure 1';
+
+		const dataDefinition = getDataStructureDefinition({
+			defaultLanguageId: 'en_US',
+			fields: [{name: localizableFieldName, repeatable: true}],
+			name: structureName,
+		});
+
+		await apiHelpers.dataEngine.createStructure(site.id, dataDefinition);
+
+		const title = getRandomString();
+		await journalEditArticlePage.createArticleWithDuplicatedField(
+			structureName,
+			site,
+			title
+		);
+
+		await journalPage.goToJournalArticleAction('Translate', title);
+
+		const duplicateFields = page.locator(
+			'[id^="_com_liferay_translation_web_internal_portlet_TranslationPortlet_infoField--DDMStructure_Text"]'
+		);
+
+		await duplicateFields.first().waitFor({state: 'visible'});
+
+		expect(duplicateFields.nth(0)).toBeVisible();
+		expect(duplicateFields.nth(1)).toBeVisible();
 	}
 );
 

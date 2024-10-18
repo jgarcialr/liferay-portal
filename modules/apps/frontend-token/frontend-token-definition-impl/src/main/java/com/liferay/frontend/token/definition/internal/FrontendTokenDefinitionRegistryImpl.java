@@ -32,7 +32,9 @@ import java.io.IOException;
 
 import java.net.URL;
 
+import java.util.ArrayList;
 import java.util.Dictionary;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
@@ -66,6 +68,21 @@ public class FrontendTokenDefinitionRegistryImpl
 			layoutSet.getCompanyId(),
 			_getCETExternalReferenceCode(layoutSet.getLayoutSetId()),
 			layoutSet.getThemeId());
+	}
+
+	@Override
+	public List<FrontendTokenDefinition> getFrontendTokenDefinitions(
+		long companyId) {
+
+		Map<String, FrontendTokenDefinition> frontendTokenDefinitions =
+			_frontendTokenDefinitionsMap.get(companyId);
+
+		List<FrontendTokenDefinition> frontendTokenDefinitionsList =
+			new ArrayList<>(frontendTokenDefinitions.values());
+
+		frontendTokenDefinitionsList.addAll(_frontendTokenDefinitions.values());
+
+		return frontendTokenDefinitionsList;
 	}
 
 	@Activate
@@ -272,15 +289,15 @@ public class FrontendTokenDefinitionRegistryImpl
 			}
 		}
 
-		Map<String, FrontendTokenDefinitionImpl> frontendTokenDefinitionImpls =
-			_frontendTokenDefinitionImplsDCLSingleton.getSingleton(
+		Map<String, FrontendTokenDefinition> frontendTokenDefinitions =
+			_frontendTokenDefinitionsDCLSingleton.getSingleton(
 				() -> {
 					_bundleTracker.open();
 
-					return _frontendTokenDefinitionImpls;
+					return _frontendTokenDefinitions;
 				});
 
-		return frontendTokenDefinitionImpls.get(themeId);
+		return frontendTokenDefinitions.get(themeId);
 	}
 
 	private String _getFrontendTokenDefinitionJSON(Bundle bundle) {
@@ -336,7 +353,7 @@ public class FrontendTokenDefinitionRegistryImpl
 					if ((frontendTokenDefinitionImpl != null) &&
 						(frontendTokenDefinitionImpl.getThemeId() != null)) {
 
-						_frontendTokenDefinitionImpls.put(
+						_frontendTokenDefinitions.put(
 							frontendTokenDefinitionImpl.getThemeId(),
 							frontendTokenDefinitionImpl);
 
@@ -357,7 +374,7 @@ public class FrontendTokenDefinitionRegistryImpl
 					Bundle bundle, BundleEvent bundleEvent,
 					FrontendTokenDefinitionImpl frontendTokenDefinitionImpl) {
 
-					_frontendTokenDefinitionImpls.remove(
+					_frontendTokenDefinitions.remove(
 						frontendTokenDefinitionImpl.getThemeId());
 				}
 
@@ -367,13 +384,13 @@ public class FrontendTokenDefinitionRegistryImpl
 	private ClientExtensionEntryRelLocalService
 		_clientExtensionEntryRelLocalService;
 
-	private final Map<String, FrontendTokenDefinitionImpl>
-		_frontendTokenDefinitionImpls = new ConcurrentHashMap<>();
-	private final DCLSingleton<Map<String, FrontendTokenDefinitionImpl>>
-		_frontendTokenDefinitionImplsDCLSingleton = new DCLSingleton<>();
 	private final FrontendTokenDefinitionJSONValidator
 		_frontendTokenDefinitionJSONValidator =
 			new FrontendTokenDefinitionJSONValidator();
+	private final Map<String, FrontendTokenDefinition>
+		_frontendTokenDefinitions = new ConcurrentHashMap<>();
+	private final DCLSingleton<Map<String, FrontendTokenDefinition>>
+		_frontendTokenDefinitionsDCLSingleton = new DCLSingleton<>();
 	private final Map<Long, Map<String, FrontendTokenDefinition>>
 		_frontendTokenDefinitionsMap = new ConcurrentHashMap<>();
 

@@ -2245,10 +2245,6 @@ public class PropsValues {
 				PropsKeys.
 					STAGING_DRAFT_EXPORT_IMPORT_CONFIGURATION_CLEAN_UP_COUNT));
 
-	public static final int STAGING_GROUPS_IN_MEMORY_FILTER_LIMIT =
-		GetterUtil.getInteger(
-			PropsUtil.get(PropsKeys.STAGING_GROUPS_IN_MEMORY_FILTER_LIMIT));
-
 	public static final boolean STAGING_LIVE_GROUP_LOCKING_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.STAGING_LIVE_GROUP_LOCKING_ENABLED));
@@ -2485,6 +2481,14 @@ public class PropsValues {
 	public static final boolean USERS_UPDATE_LAST_LOGIN = GetterUtil.getBoolean(
 		PropsUtil.get(PropsKeys.USERS_UPDATE_LAST_LOGIN));
 
+	public static final long USERS_UPDATE_LAST_LOGIN_BATCH_INTERVAL =
+		GetterUtil.getLong(
+			PropsUtil.get(PropsKeys.USERS_UPDATE_LAST_LOGIN_BATCH_INTERVAL));
+
+	public static final int USERS_UPDATE_LAST_LOGIN_BATCH_SIZE =
+		GetterUtil.getInteger(
+			PropsUtil.get(PropsKeys.USERS_UPDATE_LAST_LOGIN_BATCH_SIZE));
+
 	public static final boolean VALUE_OBJECT_ENTITY_CACHE_ENABLED =
 		GetterUtil.getBoolean(
 			PropsUtil.get(PropsKeys.VALUE_OBJECT_ENTITY_CACHE_ENABLED));
@@ -2516,11 +2520,6 @@ public class PropsValues {
 
 	public static final String[] VIRTUAL_HOSTS_IGNORE_EXTENSIONS =
 		PropsUtil.getArray(PropsKeys.VIRTUAL_HOSTS_IGNORE_EXTENSIONS);
-
-	public static final int VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT =
-		GetterUtil.getInteger(
-			PropsUtil.get(
-				PropsKeys.VIRTUAL_HOSTS_PER_COMPANY_IN_MEMORY_FILTER_LIMIT));
 
 	public static final boolean VIRTUAL_HOSTS_STRICT_ACCESS =
 		GetterUtil.getBoolean(

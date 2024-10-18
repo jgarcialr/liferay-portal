@@ -92,6 +92,7 @@ export default {
 	'confirm-deactivate-keys': 'Confirm & Deactivate Keys',
 	'confirm-deactivation-terms': 'Confirm Deactivation Terms',
 	'confirm-uninstall': 'Confirm & Uninstall',
+	'confirm-uninstall-terms': 'Confirm Uninstall Terms',
 	'contact-publisher': 'Contact Publisher',
 	'contact-sales': 'Contact Sales',
 	'contact-support': 'Contact Support',
@@ -188,7 +189,7 @@ export default {
 	'get-started': 'Get Started',
 	'go-back-to-marketplace': 'Go Back to Marketplace',
 	'go-to-app-provisioning': 'Go to App Provisioning',
-	'go-to-console': 'Go to Console',
+	'go-to-cloud-console': 'Go to Cloud Console',
 	'go-to-dashboard': 'Go to Dashboard',
 	'go-to-dxp': 'Go to DXP',
 	'go-to-marketplace': 'Go to Marketplace',
@@ -208,6 +209,7 @@ export default {
 		'If you are requesting the account on behalf of a business, please note the business name.',
 	'important-images-will-be-displayed-following-the-numerical-order-above':
 		'Important: Images will be displayed following the numerical order above',
+	'in-progress': 'In Progress',
 	'in-the-future-you-will-be-able-to-submit-your-app-directly-from-liferay-experience-cloud-projects':
 		'In the future, you will be able to submit your app directly from Liferay SaaS projects.',
 	'in-the-future-you-will-be-able-to-submit-your-app-source-code-for-additional-support-and-partnership-opportunities-with-liferay':

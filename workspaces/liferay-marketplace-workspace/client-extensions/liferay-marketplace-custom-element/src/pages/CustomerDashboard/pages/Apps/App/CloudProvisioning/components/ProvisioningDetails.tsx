@@ -9,26 +9,20 @@ import classNames from 'classnames';
 import i18n from '../../../../../../../i18n';
 import OrderDetailsHeader from '../../../../../components/OrderDetailsHeader';
 import AccountEmailInfo from '../../Licenses/CreateLicense/AccountInfo';
-import useProvisioningData from '../hooks/useProvisioningData';
+import {ProvisioningRow} from '../hooks/useProvisioningData';
 import {InstallStatus} from '../types';
 
 import './index.scss';
-import {useMarketplaceContext} from '../../../../../../../context/MarketplaceContext';
-import en_US from '../../../../../../../i18n/en_US';
 
 type ProvisioningDetailsProps = {
+	account: Account;
 	headerInfo?: {
 		image?: string;
 		licenseType?: string;
-		myUserAccount: ReturnType<
-			typeof useMarketplaceContext
-		>['myUserAccount'];
 		name?: string;
 	};
 	onClose: () => void;
-	orderItem?: ReturnType<
-		typeof useProvisioningData
-	>['provisioningTableData'][0];
+	provisioningRow: ProvisioningRow;
 };
 
 type InfoBadgeProps = {
@@ -39,6 +33,8 @@ type InfoBadgeProps = {
 
 const badgeStatus = {
 	[InstallStatus.EXPIRED]: 'provisioning-details-info-badge-expired',
+	[InstallStatus.IN_PROGRESS]:
+		'provisioning-details-info-badge-ready-to-install',
 	[InstallStatus.INSTALLED]: 'provisioning-details-info-badge-installed',
 	[InstallStatus.READY_TO_INSTALL]:
 		'provisioning-details-info-badge-ready-to-install',
@@ -64,9 +60,10 @@ const InfoBadge: React.FC<InfoBadgeProps> = ({children, status, title}) => (
 );
 
 const ProvisioningDetails: React.FC<ProvisioningDetailsProps> = ({
+	account,
 	headerInfo,
 	onClose,
-	orderItem,
+	provisioningRow,
 }) => {
 	return (
 		<div className="d-flex flex-column mb-9 provisioning-details">
@@ -94,7 +91,9 @@ const ProvisioningDetails: React.FC<ProvisioningDetailsProps> = ({
 					name={headerInfo?.name}
 				/>
 
-				<AccountEmailInfo userAccount={headerInfo?.myUserAccount} />
+				<AccountEmailInfo
+					userAccount={{...account, image: account.logoURL}}
+				/>
 			</div>
 
 			<div className="d-flex flex-row mb-7 mt-5">
@@ -104,11 +103,11 @@ const ProvisioningDetails: React.FC<ProvisioningDetailsProps> = ({
 					</p>
 
 					<InfoBadge title={i18n.translate('start-date')}>
-						{orderItem?.startDate}
+						{provisioningRow?.startDate}
 					</InfoBadge>
 
 					<InfoBadge title={i18n.translate('expiration-date')}>
-						{orderItem?.expirationDate}
+						{provisioningRow?.expirationDate}
 					</InfoBadge>
 				</div>
 
@@ -118,20 +117,18 @@ const ProvisioningDetails: React.FC<ProvisioningDetailsProps> = ({
 					</p>
 
 					<InfoBadge
-						status={orderItem?.status}
+						status={provisioningRow?.status}
 						title={i18n.translate('status')}
 					>
-						{i18n.translate(
-							orderItem?.status as keyof typeof en_US
-						)}
+						{i18n.translate(provisioningRow?.status as any)}
 					</InfoBadge>
 
 					<InfoBadge title={i18n.translate('project')}>
-						{orderItem?.project}
+						{provisioningRow?.project}
 					</InfoBadge>
 
 					<InfoBadge title={i18n.translate('environment')}>
-						{orderItem?.environment}
+						{provisioningRow?.environment}
 					</InfoBadge>
 				</div>
 			</div>

@@ -7,11 +7,15 @@ package com.liferay.object.service.test;
 
 import com.liferay.arquillian.extension.junit.bridge.junit.Arquillian;
 import com.liferay.info.collection.provider.RelatedInfoItemCollectionProvider;
+import com.liferay.object.constants.ObjectActionExecutorConstants;
+import com.liferay.object.constants.ObjectActionKeys;
+import com.liferay.object.constants.ObjectActionTriggerConstants;
 import com.liferay.object.constants.ObjectDefinitionConstants;
 import com.liferay.object.constants.ObjectFieldConstants;
 import com.liferay.object.constants.ObjectFieldSettingConstants;
 import com.liferay.object.constants.ObjectRelationshipConstants;
 import com.liferay.object.exception.DuplicateObjectRelationshipException;
+import com.liferay.object.exception.ObjectActionActiveException;
 import com.liferay.object.exception.ObjectRelationshipDeletionTypeException;
 import com.liferay.object.exception.ObjectRelationshipEdgeException;
 import com.liferay.object.exception.ObjectRelationshipNameException;
@@ -22,6 +26,7 @@ import com.liferay.object.exception.ObjectRelationshipTypeException;
 import com.liferay.object.field.builder.ObjectFieldBuilder;
 import com.liferay.object.field.builder.TextObjectFieldBuilder;
 import com.liferay.object.field.util.ObjectFieldUtil;
+import com.liferay.object.model.ObjectAction;
 import com.liferay.object.model.ObjectDefinition;
 import com.liferay.object.model.ObjectEntry;
 import com.liferay.object.model.ObjectField;
@@ -29,6 +34,7 @@ import com.liferay.object.model.ObjectFieldSetting;
 import com.liferay.object.model.ObjectRelationship;
 import com.liferay.object.related.models.test.util.ObjectEntryTestUtil;
 import com.liferay.object.relationship.util.ObjectRelationshipUtil;
+import com.liferay.object.service.ObjectActionLocalService;
 import com.liferay.object.service.ObjectDefinitionLocalService;
 import com.liferay.object.service.ObjectEntryLocalService;
 import com.liferay.object.service.ObjectFieldLocalService;
@@ -39,7 +45,10 @@ import com.liferay.object.system.SystemObjectDefinitionManager;
 import com.liferay.object.test.util.ObjectDefinitionTestUtil;
 import com.liferay.object.test.util.ObjectRelationshipTestUtil;
 import com.liferay.object.test.util.TreeTestUtil;
+import com.liferay.object.tree.Edge;
+import com.liferay.object.tree.Node;
 import com.liferay.object.tree.ObjectDefinitionTreeFactory;
+import com.liferay.object.tree.Tree;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMap;
 import com.liferay.osgi.service.tracker.collections.map.ServiceTrackerMapFactory;
 import com.liferay.petra.function.UnsafeBiConsumer;
@@ -49,22 +58,34 @@ import com.liferay.portal.kernel.dao.db.DBInspector;
 import com.liferay.portal.kernel.dao.db.IndexMetadata;
 import com.liferay.portal.kernel.dao.db.IndexMetadataFactoryUtil;
 import com.liferay.portal.kernel.dao.jdbc.DataAccess;
+import com.liferay.portal.kernel.dao.orm.EntityCache;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.model.Address;
+import com.liferay.portal.kernel.model.GroupConstants;
+import com.liferay.portal.kernel.model.ResourceConstants;
+import com.liferay.portal.kernel.model.Role;
+import com.liferay.portal.kernel.model.role.RoleConstants;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
+import com.liferay.portal.kernel.service.ResourcePermissionLocalService;
 import com.liferay.portal.kernel.test.AssertUtils;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.rule.DeleteAfterTestRun;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
+import com.liferay.portal.kernel.test.util.RoleTestUtil;
 import com.liferay.portal.kernel.test.util.ServiceContextTestUtil;
 import com.liferay.portal.kernel.test.util.TestPropsValues;
+import com.liferay.portal.kernel.util.HashMapBuilder;
 import com.liferay.portal.kernel.util.HashMapDictionary;
 import com.liferay.portal.kernel.util.LinkedHashMapBuilder;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.SystemProperties;
+import com.liferay.portal.kernel.util.UnicodePropertiesBuilder;
 import com.liferay.portal.test.rule.FeatureFlags;
 import com.liferay.portal.test.rule.Inject;
 import com.liferay.portal.test.rule.LiferayIntegrationTestRule;
 import com.liferay.portal.vulcan.util.LocalizedMapUtil;
+
+import java.io.Serializable;
 
 import java.sql.Connection;
 
@@ -114,6 +135,8 @@ public class ObjectRelationshipLocalServiceTest {
 
 	@Before
 	public void setUp() throws Exception {
+		_modifiableSystemObjectDefinition =
+			_addAndPublishModifiableSystemObjectDefinition();
 		_objectDefinition1 = _addAndPublishCustomObjectDefinition();
 		_objectDefinition2 = _addAndPublishCustomObjectDefinition();
 		_objectDefinitionTreeFactory = new ObjectDefinitionTreeFactory(
@@ -424,6 +447,12 @@ public class ObjectRelationshipLocalServiceTest {
 			_objectDefinition1, _systemObjectDefinition2, true);
 		_testAddObjectRelationshipManyToMany(
 			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+			_modifiableSystemObjectDefinition, _objectDefinition1, false);
+		_testAddObjectRelationshipManyToMany(
+			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
+			_modifiableSystemObjectDefinition, _objectDefinition1, true);
+		_testAddObjectRelationshipManyToMany(
+			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 			_objectDefinition1, _systemObjectDefinition2, false);
 		_testAddObjectRelationshipManyToMany(
 			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
@@ -434,6 +463,10 @@ public class ObjectRelationshipLocalServiceTest {
 		_testAddObjectRelationshipManyToMany(
 			ObjectRelationshipConstants.DELETION_TYPE_PREVENT,
 			_systemObjectDefinition2, _objectDefinition1, true);
+		_testAddObjectRelationshipOneToMany(
+			_modifiableSystemObjectDefinition, _objectDefinition1, false);
+		_testAddObjectRelationshipOneToMany(
+			_modifiableSystemObjectDefinition, _objectDefinition1, true);
 		_testAddObjectRelationshipOneToMany(
 			_objectDefinition1, _systemObjectDefinition2, false);
 		_testAddObjectRelationshipOneToMany(
@@ -1207,6 +1240,296 @@ public class ObjectRelationshipLocalServiceTest {
 	}
 
 	@Test
+	public void testUnbindObjectDefinitions() throws Exception {
+		Tree tree = TreeTestUtil.createObjectDefinitionTree(
+			_objectDefinitionLocalService, _objectRelationshipLocalService,
+			true,
+			LinkedHashMapBuilder.put(
+				"A", new String[] {"AA", "AB"}
+			).put(
+				"AA", new String[] {"AAA"}
+			).put(
+				"AB", new String[0]
+			).put(
+				"AAA", new String[0]
+			).build());
+
+		_unbindObjectDefinitionNode("AA", tree);
+
+		ObjectDefinition objectDefinitionA =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(), "C_A");
+
+		TreeTestUtil.assertObjectDefinitionTree(
+			LinkedHashMapBuilder.put(
+				"A", new String[] {"AB"}
+			).put(
+				"AB", new String[0]
+			).build(),
+			_objectDefinitionTreeFactory.create(
+				objectDefinitionA.getObjectDefinitionId()),
+			_objectDefinitionLocalService);
+
+		ObjectDefinition objectDefinitionAA =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(), "C_AA");
+
+		TreeTestUtil.assertObjectDefinitionTree(
+			LinkedHashMapBuilder.put(
+				"AA", new String[] {"AAA"}
+			).put(
+				"AAA", new String[0]
+			).build(),
+			_objectDefinitionTreeFactory.create(
+				objectDefinitionAA.getObjectDefinitionId()),
+			_objectDefinitionLocalService);
+
+		_unbindObjectDefinitionNode("AB", tree);
+
+		_assertRootObjectDefinitionIdIsZero("A");
+		_assertRootObjectDefinitionIdIsZero("AB");
+
+		_unbindObjectDefinitionNode("AAA", tree);
+
+		_assertRootObjectDefinitionIdIsZero("AA");
+		_assertRootObjectDefinitionIdIsZero("AAA");
+
+		TreeTestUtil.deleteObjectDefinitionHierarchy(
+			_objectDefinitionLocalService,
+			new String[] {"C_A", "C_AA", "C_AAA", "C_AAB", "C_AB"},
+			_objectEntryLocalService);
+	}
+
+	@Test
+	public void testUnbindObjectDefinitionsWithObjectAction() throws Exception {
+		Tree tree = TreeTestUtil.createObjectDefinitionTree(
+			_objectDefinitionLocalService, _objectRelationshipLocalService,
+			true,
+			LinkedHashMapBuilder.put(
+				"A", new String[] {"AA"}
+			).put(
+				"AA", new String[] {"AAA"}
+			).put(
+				"AAA", new String[0]
+			).build());
+
+		_testUnbindObjectDefinitionsWithObjectAction("AA", "A", tree);
+		_testUnbindObjectDefinitionsWithObjectAction("AAA", "AA", tree);
+
+		TreeTestUtil.deleteObjectDefinitionHierarchy(
+			_objectDefinitionLocalService,
+			new String[] {"C_A", "C_AA", "C_AAA"}, _objectEntryLocalService);
+	}
+
+	@Test
+	public void testUnbindObjectDefinitionsWithObjectEntries()
+		throws Exception {
+
+		Tree tree = TreeTestUtil.createObjectDefinitionTree(
+			_objectDefinitionLocalService, _objectRelationshipLocalService,
+			true,
+			LinkedHashMapBuilder.put(
+				"A", new String[] {"AA"}
+			).put(
+				"AA", new String[] {"AAA"}
+			).put(
+				"AAA", new String[0]
+			).build());
+
+		ObjectDefinition objectDefinitionA =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(), "C_A");
+
+		ObjectEntry objectEntryA = _addObjectEntry(
+			objectDefinitionA, Collections.emptyMap());
+
+		Role role = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(), objectDefinitionA.getClassName(),
+			ResourceConstants.SCOPE_INDIVIDUAL,
+			String.valueOf(objectEntryA.getObjectEntryId()), role.getRoleId(),
+			new String[] {ActionKeys.UPDATE, ActionKeys.VIEW});
+
+		ObjectDefinition objectDefinitionAA =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(), "C_AA");
+
+		Node nodeAA = tree.getNode(objectDefinitionAA.getPrimaryKey());
+
+		Edge edgeA_AA = nodeAA.getEdge();
+
+		ObjectRelationship objectRelationshipA_AA =
+			_objectRelationshipLocalService.getObjectRelationship(
+				edgeA_AA.getObjectRelationshipId());
+
+		ObjectField objectField = _objectFieldLocalService.fetchObjectField(
+			objectRelationshipA_AA.getObjectFieldId2());
+
+		ObjectEntry objectEntryAA1 = _addObjectEntry(
+			objectDefinitionAA,
+			HashMapBuilder.<String, Serializable>put(
+				objectField.getName(), objectEntryA.getObjectEntryId()
+			).build());
+		ObjectEntry objectEntryAA2 = _addObjectEntry(
+			objectDefinitionAA,
+			HashMapBuilder.<String, Serializable>put(
+				objectField.getName(), objectEntryA.getObjectEntryId()
+			).build());
+
+		ObjectDefinition objectDefinitionAAA =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(), "C_AAA");
+
+		Node nodeAAA = tree.getNode(objectDefinitionAAA.getPrimaryKey());
+
+		Edge edgeAA_AAA = nodeAAA.getEdge();
+
+		ObjectRelationship objectRelationshipAA_AAA =
+			_objectRelationshipLocalService.getObjectRelationship(
+				edgeAA_AAA.getObjectRelationshipId());
+
+		objectField = _objectFieldLocalService.fetchObjectField(
+			objectRelationshipAA_AAA.getObjectFieldId2());
+
+		ObjectEntry objectEntryAAA1 = _addObjectEntry(
+			objectDefinitionAAA,
+			HashMapBuilder.<String, Serializable>put(
+				objectField.getName(), objectEntryAA1.getObjectEntryId()
+			).build());
+		ObjectEntry objectEntryAAA2 = _addObjectEntry(
+			objectDefinitionAAA,
+			HashMapBuilder.<String, Serializable>put(
+				objectField.getName(), objectEntryAA2.getObjectEntryId()
+			).build());
+
+		_unbindObjectDefinitionNode("AA", tree);
+
+		_entityCache.clearCache();
+
+		_assertRootObjectEntryId(0, objectEntryA.getObjectEntryId());
+		_assertRootObjectEntryId(
+			objectEntryAA1.getObjectEntryId(),
+			objectEntryAA1.getObjectEntryId());
+		_assertRootObjectEntryId(
+			objectEntryAA1.getObjectEntryId(),
+			objectEntryAAA1.getObjectEntryId());
+		_assertRootObjectEntryId(
+			objectEntryAA2.getObjectEntryId(),
+			objectEntryAA2.getObjectEntryId());
+		_assertRootObjectEntryId(
+			objectEntryAA2.getObjectEntryId(),
+			objectEntryAAA2.getObjectEntryId());
+
+		_assertHasResourcePermission(true, objectEntryA, role);
+		_assertHasResourcePermission(true, objectEntryAA1, role);
+		_assertHasResourcePermission(true, objectEntryAA2, role);
+		_assertHasResourcePermission(false, objectEntryAAA1, role);
+		_assertHasResourcePermission(false, objectEntryAAA2, role);
+
+		_unbindObjectDefinitionNode("AAA", tree);
+
+		_entityCache.clearCache();
+
+		_assertRootObjectEntryId(0, objectEntryAA1.getObjectEntryId());
+		_assertRootObjectEntryId(0, objectEntryAA2.getObjectEntryId());
+		_assertRootObjectEntryId(0, objectEntryAAA1.getObjectEntryId());
+		_assertRootObjectEntryId(0, objectEntryAAA2.getObjectEntryId());
+
+		_assertHasResourcePermission(true, objectEntryAAA1, role);
+		_assertHasResourcePermission(true, objectEntryAAA2, role);
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAAA1);
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAAA2);
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAA1);
+		_objectEntryLocalService.deleteObjectEntry(objectEntryAA2);
+
+		_objectEntryLocalService.deleteObjectEntry(objectEntryA);
+
+		TreeTestUtil.deleteObjectDefinitionHierarchy(
+			_objectDefinitionLocalService,
+			new String[] {"C_A", "C_AA", "C_AAA"}, _objectEntryLocalService);
+	}
+
+	@Test
+	public void testUnbindObjectDefinitionsWithResourcePermissions()
+		throws Exception {
+
+		Tree tree = TreeTestUtil.createObjectDefinitionTree(
+			_objectDefinitionLocalService, _objectRelationshipLocalService,
+			true,
+			LinkedHashMapBuilder.put(
+				"A", new String[] {"AA"}
+			).put(
+				"AA", new String[0]
+			).build());
+
+		Role organizationRole = RoleTestUtil.addRole(
+			RoleConstants.TYPE_ORGANIZATION);
+
+		ObjectDefinition objectDefinitionA =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(), "C_A");
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(), objectDefinitionA.getClassName(),
+			ResourceConstants.SCOPE_GROUP_TEMPLATE,
+			String.valueOf(GroupConstants.DEFAULT_PARENT_GROUP_ID),
+			organizationRole.getRoleId(), new String[] {ActionKeys.UPDATE});
+
+		Role regularRole = RoleTestUtil.addRole(RoleConstants.TYPE_REGULAR);
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(), objectDefinitionA.getPortletId(),
+			ResourceConstants.SCOPE_COMPANY,
+			String.valueOf(TestPropsValues.getCompanyId()),
+			regularRole.getRoleId(),
+			new String[] {ActionKeys.ACCESS_IN_CONTROL_PANEL});
+
+		Role siteRole = RoleTestUtil.addRole(RoleConstants.TYPE_SITE);
+
+		_resourcePermissionLocalService.setResourcePermissions(
+			TestPropsValues.getCompanyId(), objectDefinitionA.getResourceName(),
+			ResourceConstants.SCOPE_GROUP_TEMPLATE,
+			String.valueOf(GroupConstants.DEFAULT_PARENT_GROUP_ID),
+			siteRole.getRoleId(),
+			new String[] {ObjectActionKeys.ADD_OBJECT_ENTRY});
+
+		_unbindObjectDefinitionNode("AA", tree);
+
+		ObjectDefinition objectDefinitionAA =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(), "C_AA");
+
+		Assert.assertTrue(
+			_resourcePermissionLocalService.hasResourcePermission(
+				TestPropsValues.getCompanyId(),
+				objectDefinitionAA.getClassName(),
+				ResourceConstants.SCOPE_GROUP_TEMPLATE,
+				String.valueOf(GroupConstants.DEFAULT_PARENT_GROUP_ID),
+				organizationRole.getRoleId(), ActionKeys.UPDATE));
+		Assert.assertTrue(
+			_resourcePermissionLocalService.hasResourcePermission(
+				TestPropsValues.getCompanyId(),
+				objectDefinitionAA.getPortletId(),
+				ResourceConstants.SCOPE_COMPANY,
+				String.valueOf(TestPropsValues.getCompanyId()),
+				regularRole.getRoleId(), ActionKeys.ACCESS_IN_CONTROL_PANEL));
+		Assert.assertTrue(
+			_resourcePermissionLocalService.hasResourcePermission(
+				TestPropsValues.getCompanyId(),
+				objectDefinitionAA.getResourceName(),
+				ResourceConstants.SCOPE_GROUP_TEMPLATE,
+				String.valueOf(GroupConstants.DEFAULT_PARENT_GROUP_ID),
+				siteRole.getRoleId(), ObjectActionKeys.ADD_OBJECT_ENTRY));
+
+		TreeTestUtil.deleteObjectDefinitionHierarchy(
+			_objectDefinitionLocalService, new String[] {"C_A", "C_AA"},
+			_objectEntryLocalService);
+	}
+
+	@Test
 	public void testUpdateObjectRelationship() throws Exception {
 		String externalReferenceCode = RandomTestUtil.randomString();
 
@@ -1489,6 +1812,37 @@ public class ObjectRelationshipLocalServiceTest {
 			objectDefinition.getObjectDefinitionId());
 	}
 
+	private ObjectDefinition _addAndPublishModifiableSystemObjectDefinition()
+		throws Exception {
+
+		ObjectDefinition modifiableSystemObjectDefinition =
+			ObjectDefinitionTestUtil.addModifiableSystemObjectDefinition(
+				TestPropsValues.getUserId(), null, false,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				"Test", null, null,
+				LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+				ObjectDefinitionConstants.SCOPE_SITE, null, 1,
+				Arrays.asList(
+					ObjectFieldUtil.createObjectField(
+						ObjectFieldConstants.BUSINESS_TYPE_TEXT,
+						ObjectFieldConstants.DB_TYPE_STRING,
+						RandomTestUtil.randomString(), StringUtil.randomId())));
+
+		return _objectDefinitionLocalService.publishSystemObjectDefinition(
+			TestPropsValues.getUserId(),
+			modifiableSystemObjectDefinition.getObjectDefinitionId());
+	}
+
+	private ObjectEntry _addObjectEntry(
+			ObjectDefinition objectDefinition, Map<String, Serializable> values)
+		throws Exception {
+
+		return _objectEntryLocalService.addObjectEntry(
+			TestPropsValues.getUserId(), 0,
+			objectDefinition.getObjectDefinitionId(), values,
+			ServiceContextTestUtil.getServiceContext());
+	}
+
 	private ObjectRelationship _addObjectRelationshipSystemObjectDefinition()
 		throws Exception {
 
@@ -1518,6 +1872,54 @@ public class ObjectRelationshipLocalServiceTest {
 			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
 			StringUtil.randomId(), false,
 			ObjectRelationshipConstants.TYPE_ONE_TO_MANY, null);
+	}
+
+	private void _assertHasResourcePermission(
+			boolean expectedHasResourcePermission, ObjectEntry objectEntry,
+			Role role)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				objectEntry.getObjectDefinitionId());
+
+		Assert.assertEquals(
+			expectedHasResourcePermission,
+			_resourcePermissionLocalService.hasResourcePermission(
+				TestPropsValues.getCompanyId(), objectDefinition.getClassName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(objectEntry.getObjectEntryId()),
+				role.getRoleId(), ActionKeys.UPDATE));
+		Assert.assertEquals(
+			expectedHasResourcePermission,
+			_resourcePermissionLocalService.hasResourcePermission(
+				TestPropsValues.getCompanyId(), objectDefinition.getClassName(),
+				ResourceConstants.SCOPE_INDIVIDUAL,
+				String.valueOf(objectEntry.getObjectEntryId()),
+				role.getRoleId(), ActionKeys.VIEW));
+	}
+
+	private void _assertRootObjectDefinitionIdIsZero(
+			String objectDefinitionShortName)
+		throws Exception {
+
+		ObjectDefinition objectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(),
+				"C_" + objectDefinitionShortName);
+
+		Assert.assertEquals(0, objectDefinition.getRootObjectDefinitionId());
+	}
+
+	private void _assertRootObjectEntryId(
+			long expectedRootObjectEntryId, long objectEntryId)
+		throws Exception {
+
+		ObjectEntry objectEntry = _objectEntryLocalService.fetchObjectEntry(
+			objectEntryId);
+
+		Assert.assertEquals(
+			expectedRootObjectEntryId, objectEntry.getRootObjectEntryId());
 	}
 
 	private ObjectRelationship _bindObjectDefinitions(
@@ -1923,12 +2325,113 @@ public class ObjectRelationshipLocalServiceTest {
 		_addObjectRelationshipSystemObjectDefinition();
 	}
 
+	private void _testUnbindObjectDefinitionsWithObjectAction(
+			String objectDefinitionShortName,
+			String rootObjectDefinitionShortName, Tree tree)
+		throws Exception {
+
+		ObjectDefinition rootObjectDefinition =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(),
+				"C_" + rootObjectDefinitionShortName);
+
+		ObjectAction objectAction = _objectActionLocalService.addObjectAction(
+			RandomTestUtil.randomString(), TestPropsValues.getUserId(),
+			rootObjectDefinition.getObjectDefinitionId(), true,
+			StringPool.BLANK, RandomTestUtil.randomString(),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			LocalizedMapUtil.getLocalizedMap(RandomTestUtil.randomString()),
+			RandomTestUtil.randomString(),
+			ObjectActionExecutorConstants.KEY_WEBHOOK,
+			ObjectActionTriggerConstants.KEY_ON_AFTER_ROOT_UPDATE,
+			UnicodePropertiesBuilder.put(
+				"secret", "onafterrootupdate"
+			).put(
+				"url", "https://onafterrootupdate.com"
+			).build(),
+			false);
+
+		_unbindObjectDefinitionNode(objectDefinitionShortName, tree);
+
+		objectAction = _objectActionLocalService.fetchObjectAction(
+			objectAction.getObjectActionId());
+
+		Assert.assertFalse(objectAction.isActive());
+
+		ObjectAction finalObjectAction = objectAction;
+
+		AssertUtils.assertFailure(
+			ObjectActionActiveException.class,
+			"Object action if trigger is onAfterRootUpdate but object " +
+				"definition is not a root node",
+			() -> _objectActionLocalService.updateObjectAction(
+				finalObjectAction.getExternalReferenceCode(),
+				finalObjectAction.getObjectActionId(), true,
+				finalObjectAction.getConditionExpression(),
+				finalObjectAction.getDescription(),
+				finalObjectAction.getErrorMessageMap(),
+				finalObjectAction.getLabelMap(), finalObjectAction.getName(),
+				finalObjectAction.getObjectActionExecutorKey(),
+				finalObjectAction.getObjectActionTriggerKey(),
+				finalObjectAction.getParametersUnicodeProperties()));
+	}
+
+	private void _unbindObjectDefinitionNode(
+			String objectDefinition2ShortName, Tree tree)
+		throws Exception {
+
+		ObjectDefinition objectDefinition2 =
+			_objectDefinitionLocalService.getObjectDefinition(
+				TestPropsValues.getCompanyId(),
+				"C_" + objectDefinition2ShortName);
+
+		Node node = tree.getNode(objectDefinition2.getPrimaryKey());
+
+		Edge edge = node.getEdge();
+
+		ObjectRelationship objectRelationship =
+			_objectRelationshipLocalService.getObjectRelationship(
+				edge.getObjectRelationshipId());
+
+		objectRelationship =
+			_objectRelationshipLocalService.updateObjectRelationship(
+				objectRelationship.getExternalReferenceCode(),
+				objectRelationship.getObjectRelationshipId(), 0,
+				objectRelationship.getDeletionType(), false,
+				objectRelationship.getLabelMap(), null);
+
+		Assert.assertFalse(objectRelationship.isEdge());
+
+		ObjectDefinition objectDefinition1 =
+			_objectDefinitionLocalService.fetchObjectDefinition(
+				objectRelationship.getObjectDefinitionId1());
+		objectDefinition2 = _objectDefinitionLocalService.fetchObjectDefinition(
+			objectRelationship.getObjectDefinitionId2());
+
+		Assert.assertEquals(
+			objectDefinition1.getScope(), objectDefinition2.getScope());
+
+		ObjectField objectField = _objectFieldLocalService.fetchObjectField(
+			objectRelationship.getObjectFieldId2());
+
+		Assert.assertTrue(objectField.isRequired());
+	}
+
 	@Inject
 	private static ObjectDefinitionLocalService _objectDefinitionLocalService;
 
 	private static final Pattern _pattern = Pattern.compile(
 		"R_[A-Z][0-9][A-Z][0-9]$");
 	private static ObjectDefinition _systemObjectDefinition1;
+
+	@Inject
+	private EntityCache _entityCache;
+
+	@DeleteAfterTestRun
+	private ObjectDefinition _modifiableSystemObjectDefinition;
+
+	@Inject
+	private ObjectActionLocalService _objectActionLocalService;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _objectDefinition1;
@@ -1949,6 +2452,9 @@ public class ObjectRelationshipLocalServiceTest {
 
 	@Inject
 	private ObjectRelationshipLocalService _objectRelationshipLocalService;
+
+	@Inject
+	private ResourcePermissionLocalService _resourcePermissionLocalService;
 
 	@DeleteAfterTestRun
 	private ObjectDefinition _systemObjectDefinition2;

@@ -1230,6 +1230,8 @@ public class ObjectDefinitionLocalServiceTest {
 				objectDefinition.getDBTableName(),
 				ObjectDefinitionConstants.
 					EXTERNAL_REFERENCE_CODE_PREFIX_SYSTEM_OBJECT_DEFINITION));
+		Assert.assertEquals(
+			"l_testId", objectDefinition.getPKObjectFieldName());
 		Assert.assertEquals("/test", objectDefinition.getRESTContextPath());
 		Assert.assertTrue(objectDefinition.isApproved());
 		Assert.assertTrue(objectDefinition.isEnableCategorization());
@@ -2180,82 +2182,6 @@ public class ObjectDefinitionLocalServiceTest {
 		_testSystemObjectFields(objectDefinition);
 
 		_objectDefinitionLocalService.deleteObjectDefinition(objectDefinition);
-	}
-
-	@Test
-	public void testUnbindObjectDefinition() throws Exception {
-
-		// Unbind object definition internal node
-
-		TreeTestUtil.assertObjectDefinitionTree(
-			LinkedHashMapBuilder.put(
-				"A", new String[] {"AA", "AB"}
-			).put(
-				"AA", new String[] {"AAA", "AAB"}
-			).put(
-				"AB", new String[0]
-			).put(
-				"AAA", new String[0]
-			).put(
-				"AAB", new String[0]
-			).build(),
-			TreeTestUtil.createObjectDefinitionTree(
-				_objectDefinitionLocalService, _objectRelationshipLocalService,
-				true,
-				LinkedHashMapBuilder.put(
-					"A", new String[] {"AA", "AB"}
-				).put(
-					"AA", new String[] {"AAA", "AAB"}
-				).put(
-					"AB", new String[0]
-				).put(
-					"AAA", new String[0]
-				).put(
-					"AAB", new String[0]
-				).build()),
-			_objectDefinitionLocalService);
-
-		TreeTestUtil.unbind(_objectDefinitionLocalService, "C_AA");
-
-		ObjectDefinition objectDefinition =
-			_objectDefinitionLocalService.fetchObjectDefinition(
-				TestPropsValues.getCompanyId(), "C_A");
-
-		TreeTestUtil.assertObjectDefinitionTree(
-			LinkedHashMapBuilder.put(
-				"A", new String[] {"AB"}
-			).put(
-				"AB", new String[0]
-			).build(),
-			_objectDefinitionTreeFactory.create(
-				objectDefinition.getRootObjectDefinitionId()),
-			_objectDefinitionLocalService);
-
-		// Unbind object definition leaf node
-
-		TreeTestUtil.unbind(_objectDefinitionLocalService, "C_AB");
-
-		TreeTestUtil.assertObjectDefinitionTree(
-			LinkedHashMapBuilder.put(
-				"A", new String[0]
-			).build(),
-			_objectDefinitionTreeFactory.create(
-				objectDefinition.getRootObjectDefinitionId()),
-			_objectDefinitionLocalService);
-
-		// Unbind object definition root node
-
-		TreeTestUtil.unbind(_objectDefinitionLocalService, "C_A");
-
-		objectDefinition = _objectDefinitionLocalService.fetchObjectDefinition(
-			TestPropsValues.getCompanyId(), "C_A");
-
-		Assert.assertEquals(0, objectDefinition.getRootObjectDefinitionId());
-
-		TreeTestUtil.deleteObjectDefinitionHierarchy(
-			_objectDefinitionLocalService,
-			new String[] {"C_A", "C_AA", "C_AAA", "C_AAB", "C_AB"},
-			_objectEntryLocalService);
 	}
 
 	@Test

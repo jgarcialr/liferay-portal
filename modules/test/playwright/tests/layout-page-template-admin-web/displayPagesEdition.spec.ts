@@ -5,20 +5,60 @@
 
 import {expect, mergeTests} from '@playwright/test';
 
+import {apiHelpersTest} from '../../fixtures/apiHelpersTest';
 import {displayPageTemplatesPagesTest} from '../../fixtures/displayPageTemplatesPagesTest';
 import {loginTest} from '../../fixtures/loginTest';
 import {pageEditorPagesTest} from '../../fixtures/pageEditorPagesTest';
 import {pageManagementSiteTest} from '../../fixtures/pageManagementSiteTest';
+import {ApiHelpers} from '../../helpers/ApiHelpers';
 import {clickAndExpectToBeHidden} from '../../utils/clickAndExpectToBeHidden';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
+import {getWebContentStructureId} from '../../utils/structured-content/getBasicWebContentStructureId';
+import {
+	ANIMAL_01_FRIENDLY_URL,
+	ANIMAL_DDM_STRUCTURE_KEY,
+} from '../setup/page-management-site/constants';
 
 const test = mergeTests(
+	apiHelpersTest,
 	displayPageTemplatesPagesTest,
 	pageEditorPagesTest,
 	loginTest(),
 	pageManagementSiteTest
 );
+
+async function addDefaultAnimalDisplayPageTemplate(
+	apiHelpers: ApiHelpers,
+	displayPageTemplateName: string,
+	site: Site
+) {
+	const className = await apiHelpers.jsonWebServicesClassName.fetchClassName(
+		'com.liferay.journal.model.JournalArticle'
+	);
+
+	const animalWebContentStructureId = await getWebContentStructureId(
+		apiHelpers,
+		site.id,
+		ANIMAL_DDM_STRUCTURE_KEY
+	);
+
+	const displayPage =
+		await apiHelpers.jsonWebServicesLayoutPageTemplateEntry.addDisplayPageLayoutPageTemplateEntry(
+			{
+				classNameId: className.classNameId,
+				classTypeId: String(animalWebContentStructureId),
+				groupId: site.id,
+				name: displayPageTemplateName,
+			}
+		);
+
+	await apiHelpers.jsonWebServicesLayoutPageTemplateEntry.markAsDefaultDisplayPageLayoutPageTemplateEntry(
+		{
+			layoutPageTemplateEntryId: displayPage.layoutPageTemplateEntryId,
+		}
+	);
+}
 
 test('Allow mapping repeatable fields collection provider', async ({
 	displayPageTemplatesPage,
@@ -155,3 +195,257 @@ test('Allow mapping editables to fields of related object', async ({
 
 	await expect(editable).toHaveClass(/page-editor__editable--mapped/);
 });
+
+test(
+	'Allow mapping background image',
+	{
+		tag: '@LPS-98030',
+	},
+	async ({
+		apiHelpers,
+		displayPageTemplatesPage,
+		page,
+		pageEditorPage,
+		pageManagementSite,
+	}) => {
+
+		// Create display page template for Animal and mark as default
+
+		const displayPageTemplateName = getRandomString();
+
+		await addDefaultAnimalDisplayPageTemplate(
+			apiHelpers,
+			displayPageTemplateName,
+			pageManagementSite
+		);
+
+		// Go to edit display page template
+
+		await displayPageTemplatesPage.goto(pageManagementSite.friendlyUrlPath);
+
+		await displayPageTemplatesPage.editTemplate(displayPageTemplateName);
+
+		// Map background image
+
+		await pageEditorPage.addFragment('Layout Elements', 'Container');
+
+		const containerId = await pageEditorPage.getFragmentId('Container');
+
+		await pageEditorPage.selectFragment(containerId);
+
+		await page.getByRole('tab', {exact: true, name: 'Styles'}).click();
+
+		await page
+			.getByLabel('Image Source', {exact: true})
+			.selectOption({label: 'Mapping'});
+
+		await pageEditorPage.waitForChangesSaved();
+
+		await page
+			.getByLabel('Field', {exact: true})
+			.selectOption({label: 'Main Image'});
+
+		// Publish display page template
+
+		await displayPageTemplatesPage.publishTemplate();
+
+		// Assert background image in view mode
+
+		await page.goto(
+			`web${pageManagementSite.friendlyUrlPath}/w/${ANIMAL_01_FRIENDLY_URL}`
+		);
+
+		await expect(
+			page.locator(
+				'.lfr-layout-structure-item-container[style*="dogs.jpg"]'
+			)
+		).toBeAttached();
+
+		// Delete default display page template
+
+		await displayPageTemplatesPage.goto(pageManagementSite.friendlyUrlPath);
+
+		await displayPageTemplatesPage.deleteTemplate(displayPageTemplateName);
+
+		await expect(
+			page.getByText(displayPageTemplateName, {exact: true})
+		).not.toBeVisible();
+	}
+);
+
+test(
+	'Allow mapping link',
+	{
+		tag: '@LPS-98030',
+	},
+	async ({
+		apiHelpers,
+		displayPageTemplatesPage,
+		page,
+		pageEditorPage,
+		pageManagementSite,
+	}) => {
+
+		// Create display page template for Animal and mark as default
+
+		const displayPageTemplateName = getRandomString();
+
+		await addDefaultAnimalDisplayPageTemplate(
+			apiHelpers,
+			displayPageTemplateName,
+			pageManagementSite
+		);
+
+		// Go to edit display page template
+
+		await displayPageTemplatesPage.goto(pageManagementSite.friendlyUrlPath);
+
+		await displayPageTemplatesPage.editTemplate(displayPageTemplateName);
+
+		// Map link to header fragment
+
+		await pageEditorPage.addFragment('Basic Components', 'Heading');
+
+		await pageEditorPage.mapLink(
+			'element-text',
+			'More Info Link',
+			'Heading'
+		);
+
+		// Map link to image fragment
+
+		await pageEditorPage.addFragment('Basic Components', 'Image');
+
+		await pageEditorPage.mapLink('image-square', 'More Info Link', 'Image');
+
+		// Map link to button fragment
+
+		await pageEditorPage.addFragment('Basic Components', 'Button');
+
+		await pageEditorPage.mapLink('link', 'More Info Link', 'Button');
+
+		// Publish display page template
+
+		await displayPageTemplatesPage.publishTemplate();
+
+		// Assert mapped link in view mode
+
+		await page.goto(
+			`web${pageManagementSite.friendlyUrlPath}/w/${ANIMAL_01_FRIENDLY_URL}`
+		);
+
+		expect(
+			await page
+				.locator('.component-heading')
+				.getByRole('link')
+				.getAttribute('href')
+		).toContain('https://en.wikipedia.org/wiki/Dog');
+
+		expect(
+			await page
+				.locator('.component-image')
+				.getByRole('link')
+				.getAttribute('href')
+		).toContain('https://en.wikipedia.org/wiki/Dog');
+
+		expect(
+			await page
+				.locator('.component-button')
+				.getByRole('link')
+				.getAttribute('href')
+		).toContain('https://en.wikipedia.org/wiki/Dog');
+
+		// Delete default display page template
+
+		await displayPageTemplatesPage.goto(pageManagementSite.friendlyUrlPath);
+
+		await displayPageTemplatesPage.deleteTemplate(displayPageTemplateName);
+
+		await expect(
+			page.getByText(displayPageTemplateName, {exact: true})
+		).not.toBeVisible();
+	}
+);
+
+test(
+	'Allow mapping text fields and image fields',
+	{
+		tag: ['@LPS-86550', '@LPS-182999'],
+	},
+	async ({
+		apiHelpers,
+		displayPageTemplatesPage,
+		page,
+		pageEditorPage,
+		pageManagementSite,
+	}) => {
+
+		// Create display page template for Animal and mark as default
+
+		const displayPageTemplateName = getRandomString();
+
+		await addDefaultAnimalDisplayPageTemplate(
+			apiHelpers,
+			displayPageTemplateName,
+			pageManagementSite
+		);
+
+		// Go to edit display page template
+
+		await displayPageTemplatesPage.goto(pageManagementSite.friendlyUrlPath);
+
+		await displayPageTemplatesPage.editTemplate(displayPageTemplateName);
+
+		// Map author name
+
+		await pageEditorPage.addFragment('Basic Components', 'Heading');
+
+		const headingFragmentId = await pageEditorPage.getFragmentId('Heading');
+
+		await pageEditorPage.selectEditable(headingFragmentId, 'element-text');
+
+		await page.getByLabel('Field').selectOption('Author Name');
+
+		// Map author profile image
+
+		await pageEditorPage.addFragment('Basic Components', 'Image');
+
+		const imageFragmentId = await pageEditorPage.getFragmentId('Image');
+
+		await pageEditorPage.selectEditable(imageFragmentId, 'image-square');
+
+		await page
+			.getByLabel('Source Selection', {exact: true})
+			.selectOption('Mapping');
+
+		await pageEditorPage.waitForChangesSaved();
+
+		await page.getByLabel('Field').selectOption('Author Profile Image');
+
+		// Publish display page template
+
+		await displayPageTemplatesPage.publishTemplate();
+
+		// Assert mapped fields in view mode
+
+		await page.goto(
+			`web${pageManagementSite.friendlyUrlPath}/w/${ANIMAL_01_FRIENDLY_URL}`
+		);
+
+		await expect(
+			page.getByRole('heading', {name: 'Test Test'})
+		).toBeVisible();
+
+		await expect(page.getByRole('img', {name: 'Test Test'})).toBeVisible();
+
+		// Delete default display page template
+
+		await displayPageTemplatesPage.goto(pageManagementSite.friendlyUrlPath);
+
+		await displayPageTemplatesPage.deleteTemplate(displayPageTemplateName);
+
+		await expect(
+			page.getByText(displayPageTemplateName, {exact: true})
+		).not.toBeVisible();
+	}
+);

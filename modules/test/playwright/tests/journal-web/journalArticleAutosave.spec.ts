@@ -15,6 +15,7 @@ import {systemSettingsPageTest} from '../../fixtures/systemSettingsPageTest';
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import fillAndClickOutside from '../../utils/fillAndClickOutside';
 import getRandomString from '../../utils/getRandomString';
+import {openFieldset} from '../../utils/openFieldset';
 import {waitForAlert} from '../../utils/waitForAlert';
 import {journalPagesTest} from './fixtures/journalPagesTest';
 import getDataStructureDefinition from './utils/getDataStructureDefinition';
@@ -472,11 +473,11 @@ autoSaveUndoRedoTest(
 
 		await expect(
 			page.getByRole('menuitem', {name: 'Undo All'})
-		).toBeEnabled();
+		).toHaveClass('dropdown-item');
 
 		await expect(
 			page.getByRole('menuitem', {name: 'Edit Title'})
-		).toBeDisabled();
+		).toHaveClass('dropdown-item active');
 
 		await expect(async () => {
 			await journalEditArticlePage.fillFriendlyURL(friendlyURL);
@@ -485,12 +486,12 @@ autoSaveUndoRedoTest(
 
 			await expect(
 				page.getByRole('menuitem', {name: 'Edit Title'})
-			).toBeEnabled();
+			).toHaveClass('dropdown-item');
 		}).toPass();
 
 		await expect(
 			page.getByRole('menuitem', {name: 'Edit Friendly URL'})
-		).toBeDisabled();
+		).toHaveClass('dropdown-item active');
 
 		const textField = page.getByLabel(textFieldName);
 
@@ -513,10 +514,16 @@ autoSaveUndoRedoTest(
 
 			await expect(
 				page.getByRole('menuitem', {name: 'Change Language'})
-			).toBeEnabled();
-		}).toPass();
+			).toHaveClass('dropdown-item');
 
-		await page.getByRole('menuitem', {name: 'Undo All'}).click();
+			await page.getByRole('menuitem', {name: 'Undo All'}).click();
+
+			await expect(
+				page.locator(
+					'#_com_liferay_journal_web_portlet_JournalPortlet_lockErrorIndicator'
+				)
+			).toBeVisible();
+		}).toPass();
 
 		await expect(journalEditArticlePage.friendlyURLInput).toBeEmpty();
 
@@ -590,11 +597,9 @@ autoSaveTest(
 
 		await journalEditArticlePage.fillTitle(title);
 
-		await expect(
-			journalEditArticlePage.changesSavedIndicator
-		).toBeVisible();
+		await journalEditArticlePage.changesSavedIndicator.waitFor();
 
-		await page.getByRole('link', {name: 'Basic Information'}).click();
+		await openFieldset(page, 'Basic Information');
 
 		await expect(page.getByText('1.0')).toBeVisible();
 
@@ -625,7 +630,7 @@ autoSaveTest(
 			).toBeVisible();
 		}).toPass();
 
-		await page.getByRole('link', {name: 'Basic Information'}).click();
+		await openFieldset(page, 'Basic Information');
 
 		await expect(page.getByText('1.1')).toBeVisible();
 

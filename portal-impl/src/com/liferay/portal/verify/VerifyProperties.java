@@ -2265,7 +2265,15 @@ public class VerifyProperties {
 			"tags.asset.increment.view.counter.enabled",
 			"asset.entry.increment.view.counter.enabled"
 		},
-		{"sql.data.max.parameters", "database.max.parameters"}
+		{"sql.data.max.parameters", "database.max.parameters"},
+		{
+			"staging.groups.in.memory.filter.limit",
+			"cacheable.query.limit.LPD-28122"
+		},
+		{
+			"virtual.hosts.per.company.in.memory.filter.limit",
+			"cacheable.query.limit.LPD-27353"
+		}
 	};
 
 	private static final String[][] _RENAMED_SYSTEM_KEYS = {

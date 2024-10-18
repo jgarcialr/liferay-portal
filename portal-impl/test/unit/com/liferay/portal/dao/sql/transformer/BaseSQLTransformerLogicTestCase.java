@@ -83,13 +83,6 @@ public abstract class BaseSQLTransformerLogicTestCase {
 	}
 
 	@Test
-	public void testReplaceDate() {
-		Assert.assertEquals(
-			getDateFormatTransformedSQL(),
-			sqlTransformer.transform(getDateFormatOriginalSQL()));
-	}
-
-	@Test
 	public void testReplaceDropTableIfExistsText() {
 		Assert.assertEquals(
 			getDropTableIfExistsTextTransformedSQL(),
@@ -237,16 +230,6 @@ public abstract class BaseSQLTransformerLogicTestCase {
 
 	protected String getCrossJoinTransformedSQL() {
 		return getCrossJoinOriginalSQL();
-	}
-
-	protected String getDateFormatOriginalSQL() {
-		return "select foo from Foo where TRUNCATE_TO_SECONDS(foo) = " +
-			"2024-10-04 12:34:56";
-	}
-
-	protected String getDateFormatTransformedSQL() {
-		return "select foo from Foo where DATE_FORMAT(foo, " +
-			"'%Y-%m-%dT%H:%i:%sZ') = 2024-10-04 12:34:56";
 	}
 
 	protected String getDropTableIfExistsTextOriginalSQL() {

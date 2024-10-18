@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {ClayButtonWithIcon} from '@clayui/button';
+import ClayButton, {ClayButtonWithIcon} from '@clayui/button';
 import ClayDropDown, {Align} from '@clayui/drop-down';
+import ClayIcon from '@clayui/icon';
 import React, {useCallback, useEffect, useState} from 'react';
 
 const META_FIELD_NAMES = {
@@ -476,19 +477,27 @@ export default function UndoRedo({
 
 					<ClayDropDown
 						active={active}
-						alignmentPosition={Align.BottomRight}
+						alignmentPosition={Align.BottomLeft}
 						className="ml-2"
 						onActiveChange={setActive}
 						trigger={
-							<ClayButtonWithIcon
+							<ClayButton
 								aria-label={Liferay.Language.get('history')}
 								aria-pressed={active}
+								className="px-2"
 								disabled={history.length <= 1}
 								displayType="secondary"
 								size="sm"
-								symbol="time"
 								title={Liferay.Language.get('history')}
-							/>
+							>
+								<span className="inline-item inline-item-before">
+									<ClayIcon symbol="time" />
+								</span>
+
+								<span className="inline-item">
+									<ClayIcon symbol="caret-bottom" />
+								</span>
+							</ClayButton>
 						}
 					>
 						<ClayDropDown.ItemList>
@@ -497,15 +506,20 @@ export default function UndoRedo({
 									return (
 										index > 0 && (
 											<ClayDropDown.Item
-												disabled={step === index}
+												active={step === index}
 												key={index}
 												onClick={() => {
+													if (index === step) {
+														return;
+													}
+
 													Liferay.fire(
 														'journal:goto',
 														{
 															step: index,
 														}
 													);
+
 													if (index < step) {
 														let i = step;
 														while (i > index) {
@@ -523,15 +537,17 @@ export default function UndoRedo({
 
 													setActive(false);
 												}}
-												symbolRight={
+												symbolLeft={
 													step === index
 														? 'check'
 														: ''
 												}
 											>
-												{METADATA_FIELD_NAME_HISTORY[
-													item.name
-												] || item.name}
+												<span className="ml-4 px-1">
+													{METADATA_FIELD_NAME_HISTORY[
+														item.name
+													] || item.name}
+												</span>
 											</ClayDropDown.Item>
 										)
 									);
@@ -541,20 +557,28 @@ export default function UndoRedo({
 							<ClayDropDown.Divider />
 
 							<ClayDropDown.Item
-								disabled={step === 0}
+								active={step === 0}
 								onClick={() => {
+									if (step === 0) {
+										return;
+									}
+
 									Liferay.fire('journal:goto', {
 										step: 0,
 									});
+
 									let i = step;
 									while (i > 0) {
 										i--;
 										handleUndo(i);
 									}
+
 									setActive(false);
 								}}
 							>
-								{Liferay.Language.get('undo-all')}
+								<span className="ml-4 px-1">
+									{Liferay.Language.get('undo-all')}
+								</span>
 							</ClayDropDown.Item>
 						</ClayDropDown.ItemList>
 					</ClayDropDown>

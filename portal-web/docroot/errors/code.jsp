@@ -37,6 +37,13 @@ String xRequestWith = request.getHeader(HttpHeaders.X_REQUESTED_WITH);
 	<c:when test="<%= GetterUtil.getBoolean(request.getAttribute(WebKeys.UNKNOWN_VIRTUAL_HOST)) %>">
 		<liferay-ui:message key="unknown-virtual-hostname" />: <%= PortalUtil.getHost(request) %>
 	</c:when>
+	<c:when test="<%= code == HttpServletResponse.SC_NOT_FOUND %>">
+
+		<%
+		PortalUtil.sendError(HttpServletResponse.SC_NOT_FOUND, new NoSuchLayoutException(uri, exception), request, response);
+		%>
+
+	</c:when>
 	<c:when test="<%= !Validator.isBlank(dynamicIncludeKey) %>">
 		<liferay-util:dynamic-include key="<%= dynamicIncludeKey %>" />
 	</c:when>
@@ -68,7 +75,7 @@ String xRequestWith = request.getHeader(HttpHeaders.X_REQUESTED_WITH);
 				<meta content="1; url=<%= HtmlUtil.escapeAttribute(redirect) %>" http-equiv="refresh" />
 			</head>
 
-			<body onload="javascript:location.replace('<%= HtmlUtil.escapeJS(redirect) %>');">
+			<body>
 
 				<!--
 				The numbers below are used to fill up space so that this works properly in IE.
@@ -79,6 +86,12 @@ String xRequestWith = request.getHeader(HttpHeaders.X_REQUESTED_WITH);
 				12345678901234567890123456789012345678901234567890123456789012345678901234567890
 				12345678901234567890123456789012345678901234567890123456789012345678901234567890
 				-->
+
+				<aui:script position="inline">
+					document.body.onload = function() {
+						window.location.replace('<%= HtmlUtil.escapeJS(redirect) %>');
+					}
+				</aui:script>
 			</body>
 		</html>
 	</c:when>

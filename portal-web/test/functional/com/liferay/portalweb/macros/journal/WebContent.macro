@@ -1493,7 +1493,9 @@ definition {
 		WebContentNavigator.gotoEditCP(webContentTitle = ${webContentTitle});
 
 		if (isSet(locale)) {
-			PortletEntry.changeLocale(locale = ${locale});
+			PortletEntry.changeLocale(
+				locale = ${locale},
+				translated = "true");
 		}
 
 		WebContent.addWithStructureCP(
@@ -2082,7 +2084,7 @@ definition {
 
 	@summary = "Default summary"
 	macro viewAvailableLanguages(availableLanguageList = null, unavailableLanguageList = null) {
-		Click(locator1 = "Button#LOCALIZATION_GENERIC");
+		Click(locator1 = "Button#LOCALIZATION_TRANSLATED");
 
 		for (var availableLanguage : list ${availableLanguageList}) {
 			AssertElementPresent(
@@ -2775,7 +2777,9 @@ definition {
 						translated = ${translated});
 				}
 				else {
-					PortletEntry.changeLocale(locale = ${webContentLocaleFieldLabel});
+					PortletEntry.changeLocale(
+						locale = ${webContentLocaleFieldLabel},
+						translated = "true");
 				}
 			}
 

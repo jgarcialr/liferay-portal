@@ -33,14 +33,14 @@ public class GoogleJavascriptMinifierTest {
 		GoogleJavaScriptMinifier googleJavaScriptMinifier =
 			new GoogleJavaScriptMinifier();
 
-		String code = "function(){ var invalidFunctionExpression; }";
+		String code = "function() { var invalidFunctionExpression; }";
 
 		try (LogCapture logCapture = LoggerTestUtil.configureJDKLogger(
 				GoogleJavaScriptMinifier.class.getName(), Level.SEVERE)) {
 
 			String minifiedJS = googleJavaScriptMinifier.compress("test", code);
 
-			Assert.assertEquals(44, minifiedJS.length());
+			Assert.assertEquals(45, minifiedJS.length());
 
 			List<LogEntry> logEntries = logCapture.getLogEntries();
 

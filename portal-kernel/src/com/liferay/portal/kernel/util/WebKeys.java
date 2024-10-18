@@ -685,6 +685,8 @@ public interface WebKeys {
 
 	public static final String USER = "USER";
 
+	public static final String USER_DIGEST = "USER_DIGEST";
+
 	public static final String USER_GROUP = "USER_GROUP";
 
 	public static final String USER_ID = "USER_ID";

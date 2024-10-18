@@ -1586,7 +1586,7 @@ definition {
 				productName = "Simple Product",
 				type = "images");
 
-			var imageDisplayDate = DateUtil.format(${imageDisplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yy");
+			var imageDisplayDate = DateUtil.format(${imageDisplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yyyy");
 
 			AssertElementPresent(
 				key_columnNumber = 3,
@@ -1605,7 +1605,7 @@ definition {
 				productName = "Simple Product",
 				type = "images");
 
-			var imageDiplayDate = DateUtil.format(${imageDiplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yy");
+			var imageDiplayDate = DateUtil.format(${imageDiplayDate}, "yyyy-MM-dd'T'HH:mm:ss'Z'", "MMM d, yyyy");
 
 			for (var dateKeyWords : list "Seconds,Minutes,Hours,Days,Months") {
 				AssertElementNotPresent(
@@ -2804,80 +2804,6 @@ definition {
 		CommerceNavigator.searchEntry(entryName = "MIN930178");
 
 		CommerceEntry.deleteCommerceEntry(entryName = "MIN930178");
-	}
-
-	@priority = 5
-	test ProductPublishing {
-		property portal.acceptance = "true";
-
-		CommerceAccelerators.initializeNewSiteViaAccelerator(siteName = "Minium");
-
-		CommerceProducts.openProductsAdmin();
-
-		CPCommerceCatalog.newProductsEntry(
-			productCatalog = "Minium",
-			productName = "Simple T-Shirt",
-			productType = "Simple");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Options");
-
-		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "Package Quantity",
-			title = "Add Option");
-
-		CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-		CommerceSKUs.addSKU(
-			optionValuesList = "6:10.0,12:20.0,24:30.0,48:40.0,112:50.0",
-			priceList = "Minium Base Price List");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Media");
-
-		CommerceProductImages.addProductImages(
-			imageTitles = "Black,Black:1,Blue,Blue:1,White",
-			optionValues = "6,12,24,48,112",
-			validationImage = "true");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Specifications");
-
-		CommerceNavigator.gotoCommercePortletNavItem(navItem = "Specification Groups");
-
-		CommerceEntry.createNewSpecificationGroups(
-			specificationDescription = "SpecificationGroups",
-			specificationTitle = "SpecificationGroups");
-
-		CommerceNavigator.gotoPortlet(
-			category = "Product Management",
-			portlet = "Specifications");
-
-		CommerceEntry.createNewSpecificationLabels(
-			specificationDescription = "SpecificationLabel",
-			specificationGroupTitle = "SpecificationGroups",
-			specificationTitle = "SpecificationLabel");
-
-		CommerceProducts.openProductsAdmin();
-
-		WaitForElementPresent(locator1 = "CommerceNavigation#SEARCH_FIELD");
-
-		CommerceNavigator.searchEntry(entryName = "Simple T-Shirt");
-
-		CommerceNavigator.gotoEntry(entryName = "Simple T-Shirt");
-
-		CommerceRelations.assignSingleRelationToProductsEntry(
-			entryName = "SpecificationLabel",
-			title = "Specifications");
-
-		CommerceEntry.gotoMenuTab(menuTab = "Options");
-
-		CommerceEntry.viewProductOptions(
-			optionList = "6,12,24,48,112",
-			optionName = "Package Quantity");
-
-		CommerceEntry.gotoMenuTab(menuTab = "SKUs");
-
-		CommerceEntry.viewProductSkus(skusList = "6:10.00,12:20.00,24:30.00,48:40.00,112:50.00");
 	}
 
 	@priority = 5

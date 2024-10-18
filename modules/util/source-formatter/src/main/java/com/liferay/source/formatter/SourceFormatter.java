@@ -343,9 +343,9 @@ public class SourceFormatter {
 		if (!_sourceFormatterArgs.isJavaParserEnabled()) {
 			System.out.println(
 				StringBundler.concat(
-					"WARNING: Setting property 'java.parser.enabled' to ",
-					"'false' may prevent certain Java/JSP checks from working ",
-					"properly."));
+					"WARNING: Setting property \"java.parser.enabled\" to ",
+					"\"false\" may prevent certain Java/JSP checks from ",
+					"working properly."));
 		}
 
 		_sourceProcessors.add(new BNDRunSourceProcessor());
@@ -1346,8 +1346,8 @@ public class SourceFormatter {
 					throw new Exception(
 						StringBundler.concat(
 							"Found formatting issue in SHA ", parts[0], ":\n",
-							"The commit message contains the word '", keyword,
-							"', which could reveal potential security ",
+							"The commit message contains the word \"", keyword,
+							"\", which could reveal potential security ",
 							"vulnerablities. Please see the vulnerability ",
 							"keywords that are specified in source-formatter.",
 							"properties in the liferay-portal repository."));

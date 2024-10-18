@@ -39,7 +39,7 @@ import org.osgi.service.cm.ConfigurationAdmin;
 /**
  * @author Mikel Lorza
  */
-@FeatureFlags("LPS-203351")
+@FeatureFlags("LPD-11147")
 @RunWith(Arquillian.class)
 @Sync
 public class FriendlyURLSeparatorConfigurationManagerTest {
@@ -118,9 +118,21 @@ public class FriendlyURLSeparatorConfigurationManagerTest {
 		JSONObject friendlyURLSeparatorsJSONObject = JSONUtil.put(
 			JournalArticle.class.getName(), "/test1/");
 
-		_friendlyURLSeparatorConfigurationManager.
-			updateFriendlyURLSeparatorCompanyConfiguration(
-				_companyId, friendlyURLSeparatorsJSONObject.toString());
+		ConfigurationTestUtil.updateConfiguration(
+			FriendlyURLSeparatorCompanyConfiguration.class.getName(),
+			() -> {
+				_friendlyURLSeparatorConfigurationManager.
+					updateFriendlyURLSeparatorCompanyConfiguration(
+						_companyId, friendlyURLSeparatorsJSONObject.toString());
+
+				Configuration configuration =
+					_configurationAdmin.getConfiguration(
+						FriendlyURLSeparatorCompanyConfiguration.class.
+							getName(),
+						StringPool.QUESTION);
+
+				configuration.update();
+			});
 
 		FriendlyURLSeparatorCompanyConfiguration
 			friendlyURLSeparatorCompanyConfiguration =

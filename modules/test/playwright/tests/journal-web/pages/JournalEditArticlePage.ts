@@ -20,6 +20,7 @@ export class JournalEditArticlePage {
 	readonly clearButton: Locator;
 	readonly content: Locator;
 	readonly defaultTemplateButton: Locator;
+	readonly duplicateButton: Locator;
 	readonly friendlyURLInput: Locator;
 	readonly friendlyUrlToggle: Locator;
 	readonly historyButton: Locator;
@@ -31,9 +32,13 @@ export class JournalEditArticlePage {
 	readonly submitForWorkflowButton: Locator;
 	readonly titleInput: Locator;
 	readonly undoButton: Locator;
+	readonly alertErrorMessage: Locator;
 
 	constructor(page: Page) {
 		this.page = page;
+		this.alertErrorMessage = page.locator(
+			'div.article-content-content >> div.alert-danger'
+		);
 		this.changesSavedIndicator = page.locator(
 			'#_com_liferay_journal_web_portlet_JournalPortlet_changesSavedIndicator'
 		);
@@ -42,7 +47,7 @@ export class JournalEditArticlePage {
 		this.defaultTemplateButton = page.getByRole('button', {
 			name: 'Default Template',
 		});
-
+		this.duplicateButton = page.getByLabel('Add Duplicate Field Text');
 		this.friendlyURLInput = page.locator(
 			'#_com_liferay_journal_web_portlet_JournalPortlet_friendlyURL'
 		);
@@ -168,19 +173,25 @@ export class JournalEditArticlePage {
 	}
 
 	async fillFriendlyURL(friendlyURL: string) {
-		await this.friendlyURLInput.fill(friendlyURL);
+		await fillAndClickOutside(
+			this.page,
+			this.friendlyURLInput,
+			friendlyURL
+		);
 	}
 
-	async createBasicArticleWithFriendlyURL(site, page, articleTitle?: string) {
+	async createBasicArticleWithFriendlyURL(site, structureName?: string) {
 		await this.journalPage.goto(site.friendlyUrlPath);
 		await this.journalPage.goToCreateArticle(
-			articleTitle || 'Basic Web Content'
+			structureName || 'Basic Web Content'
 		);
-		await this.fillFriendlyURL('test');
+
 		const title = getRandomString();
-		await this.titleInput.fill(title);
+		await fillAndClickOutside(this.page, this.titleInput, title);
+		await this.fillFriendlyURL('test');
+
 		await this.publishButton.click();
-		await expect(page.getByTitle(title, {exact: true})).toBeVisible();
+		await expect(this.page.getByTitle(title, {exact: true})).toBeVisible();
 	}
 
 	async createWCWithBasicPublishButton(articleTitle: string) {
@@ -192,6 +203,39 @@ export class JournalEditArticlePage {
 			this.page,
 			`Success:${articleTitle} was created successfully.`
 		);
+	}
+	async createArticleWithDuplicatedField(
+		structureName: string,
+		site?: Site,
+		title?: string
+	) {
+		await this.goto({
+			siteUrl: site.friendlyUrlPath,
+			structureName,
+		});
+
+		await fillAndClickOutside(
+			this.page,
+			this.titleInput,
+			title || getRandomString()
+		);
+
+		const field = this.page.locator(
+			'input[id^="_com_liferay_journal_web_portlet_JournalPortlet_ddm$$Text"]'
+		);
+
+		await fillAndClickOutside(this.page, field, 'Text Field');
+
+		await this.duplicateButton.click();
+
+		await this.page
+			.locator(
+				'input[id^="_com_liferay_journal_web_portlet_JournalPortlet_ddm$$Text"]'
+			)
+			.nth(1)
+			.fill('Duplicated Text Field');
+
+		await this.publishButton.click();
 	}
 
 	async fillTitle(title: string) {

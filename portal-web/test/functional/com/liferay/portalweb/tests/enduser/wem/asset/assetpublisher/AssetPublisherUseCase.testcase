@@ -71,42 +71,6 @@ definition {
 		}
 	}
 
-	@description = "This is a test for LPS-132428. The user could configure Asset Publisher after adding the Kaleo Forms admin portlet to blacklist."
-	@priority = 4
-	test ConfigureAssetPublisherAfterAddingKaleoFormsAdminPortletToBlackList {
-		property test.liferay.virtual.instance = "false";
-		property test.run.environment = "EE";
-		property test.run.type = "single";
-
-		task ("Add the Kaleo Forms admin portlet to blacklist") {
-			ApplicationsMenu.gotoPortlet(
-				category = "Configuration",
-				panel = "Control Panel",
-				portlet = "System Settings");
-
-			SystemSettings.gotoConfiguration(
-				configurationCategory = "Module Container",
-				configurationName = "Component Blacklist",
-				configurationScope = "System Scope");
-
-			BundleBlacklist.blacklistModuleAndComponentConfiguration(
-				label = "Blacklist Component Names",
-				symbolicName = "com.liferay.portal.workflow.kaleo.forms.web.internal.portlet.KaleoFormsAdminPortlet");
-		}
-
-		task ("Configure the Asset Publisher") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configureDisplaySettings(displaySettings = "Print");
-		}
-
-		task ("View no NullPointerException thrown") {
-			AssertConsoleTextNotPresent(value1 = "java.lang.NullPointerException");
-		}
-	}
-
 	@description = "Configure the Asset Publisher as Site Administrator."
 	@priority = 4
 	test ConfigureAssetPublisherAsSiteAdministrater {
@@ -386,7 +350,9 @@ definition {
 		}
 
 		task ("Add the localized contents") {
-			PortletEntry.changeLocale(locale = "de-DE");
+			PortletEntry.changeLocale(
+				locale = "de-DE",
+				translated = "true");
 
 			WebContent.addCP(webContentTitle = "Netz Inhalt1 Titel");
 
@@ -404,7 +370,9 @@ definition {
 		}
 
 		task ("Add the localized contents") {
-			PortletEntry.changeLocale(locale = "de-DE");
+			PortletEntry.changeLocale(
+				locale = "de-DE",
+				translated = "true");
 
 			WebContent.addCP(webContentTitle = "Netz Inhalt2 Titel");
 
@@ -422,7 +390,9 @@ definition {
 		}
 
 		task ("Add the localized contents") {
-			PortletEntry.changeLocale(locale = "de-DE");
+			PortletEntry.changeLocale(
+				locale = "de-DE",
+				translated = "true");
 
 			WebContent.addCP(webContentTitle = "Netz Inhalt3 Titel");
 
@@ -536,102 +506,6 @@ definition {
 			LanguagePortlet.selectLanguagePG(
 				locale = "en-US",
 				textIcon = "english-United States");
-		}
-
-		task ("Change the subtype to Any") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.configureAssetTypePG(
-				assetSubtype = "Any",
-				selectedAsset = "Web Content Article");
-		}
-
-		task ("View the displayed assets") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 345,
-				assetTitle = "Web Content1 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 123,
-				assetTitle = "Web Content2 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 567,
-				assetTitle = "Web Content3 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content4 Content",
-				assetTitle = "Web Content4 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content5 Text",
-				assetTitle = "Web Content5 Title");
-		}
-
-		task ("Move the second structure to Available") {
-			AssetPublisherPortlet.configureAssetTypePG(
-				selectContent = "WC Structure1 Name",
-				selectedAsset = "Web Content Article",
-				selectMoreThanOneSubtype = "true");
-		}
-
-		task ("View the displayed assets") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 345,
-				assetTitle = "Web Content1 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 123,
-				assetTitle = "Web Content2 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = 567,
-				assetTitle = "Web Content3 Title");
-
-			AssetPublisherPortlet.viewAssetPG(
-				assetContent = "Web Content4 Content",
-				assetTitle = "Web Content4 Title");
-
-			AssetPublisherPortlet.viewAssetNotPresentPG(
-				assetContent = "Web Content5 Text",
-				assetTitle = "Web Content5 Title");
-		}
-
-		task ("Disable the Searchable of the first structure's fields") {
-			WebContentNavigator.openWebContentAdmin(siteURLKey = "test-site-name");
-
-			NavItem.gotoStructures();
-
-			WebContentNavigator.gotoEditStructure(structureName = "WC Structure Name");
-
-			for (var fieldFieldLabel : list "Boolean,Multiple Selection,Text,Select from List,Single Selection,Date,Numeric,Rich Text,Image,Text Box,Decimal") {
-				DataEngine.editFieldSearchable(
-					fieldFieldLabel = ${fieldFieldLabel},
-					searchableType = "Disable");
-			}
-
-			WebContentStructures.saveCP();
-		}
-
-		task ("View no available filter fields of the first structure") {
-			Navigator.gotoSitePage(
-				pageName = "Asset Publisher Page",
-				siteName = "Test Site Name");
-
-			AssetPublisherPortlet.viewFilterAndFieldsPG(
-				assetSubtype = "WC Structure Name",
-				noneIndexable = "true",
-				selectedAsset = "Web Content Article");
 		}
 	}
 
@@ -1596,7 +1470,9 @@ definition {
 
 		WebContent.editFriendlyURL(webContentFriendlyURL = "webcontentenglish");
 
-		PortletEntry.changeLocale(locale = "de-DE");
+		PortletEntry.changeLocale(
+			locale = "de-DE",
+			translated = "true");
 
 		WebContent.addCP(
 			webContentContent = "WC WebContent German Content",

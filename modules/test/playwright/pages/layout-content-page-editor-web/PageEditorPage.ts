@@ -238,11 +238,12 @@ export class PageEditorPage {
 				);
 
 				if (inputType === 'checkbox') {
-					if (value as boolean) {
-						await field.check();
-					}
-					else {
-						await field.uncheck();
+					const checked = await field.evaluate(
+						(element: HTMLInputElement) => element.checked
+					);
+
+					if (value !== checked) {
+						await field.click();
 					}
 
 					return;
@@ -675,6 +676,26 @@ export class PageEditorPage {
 		await selectElement(tabElement);
 	}
 
+	async goToWidgetConfiguration(
+		layout: Layout,
+		site: Site,
+		widgetId: string
+	) {
+		await this.goto(layout, site.friendlyUrlPath);
+
+		const topper = this.getTopper(widgetId);
+
+		await topper.hover();
+
+		await expect(topper.locator('.portlet-options')).toBeVisible();
+
+		await topper.locator('.portlet-options').click();
+
+		await this.page
+			.getByRole('menuitem', {exact: true, name: 'Configuration'})
+			.click();
+	}
+
 	async hideFragment(fragmentId: string, isDesktop = true) {
 		await this.clickFragmentOption(fragmentId, 'Hide Fragment', isDesktop);
 
@@ -762,6 +783,22 @@ export class PageEditorPage {
 		);
 	}
 
+	async mapLink(editableId: string, fieldId: string, fragmentName: string) {
+		const buttonFragmentId = await this.getFragmentId(fragmentName);
+
+		await this.selectEditable(buttonFragmentId, editableId);
+
+		await this.page.getByRole('tab', {exact: true, name: 'Link'}).click();
+
+		await this.page.locator('select').selectOption({label: 'Mapped URL'});
+
+		await this.waitForChangesSaved();
+
+		await this.page
+			.getByLabel('Field', {exact: true})
+			.selectOption({label: fieldId});
+	}
+
 	async openExperienceSelector() {
 		await expandSection(this.experienceSelector);
 
@@ -787,26 +824,6 @@ export class PageEditorPage {
 		await this.goToConfigurationTab('Styles');
 
 		await this.page.getByLabel(spacingType, {exact: true}).click();
-	}
-
-	async goToWidgetConfiguration(
-		layout: Layout,
-		site: Site,
-		widgetId: string
-	) {
-		await this.goto(layout, site.friendlyUrlPath);
-
-		const topper = this.getTopper(widgetId);
-
-		await topper.hover();
-
-		await expect(topper.locator('.portlet-options')).toBeVisible();
-
-		await topper.locator('.portlet-options').click();
-
-		await this.page
-			.getByRole('menuitem', {exact: true, name: 'Configuration'})
-			.click();
 	}
 
 	async pasteFragment(fragmentId: string) {
