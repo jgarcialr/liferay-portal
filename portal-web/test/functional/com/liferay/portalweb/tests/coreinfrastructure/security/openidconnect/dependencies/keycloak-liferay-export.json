@@ -1630,7 +1630,7 @@
 				"publicClient": false,
 				"redirectUris": [
 					"http://localhost:8080/*",
-					"http://www.able.com:8080/*"
+					"http://www.able.com:8080/*",
 					"http://www.able.com:8443/*"
 				],
 				"rootUrl": "http://localhost:8080",
