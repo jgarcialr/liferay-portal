@@ -1630,7 +1630,7 @@
 				"publicClient": false,
 				"redirectUris": [
 					"http://localhost:8080/*",
-					"http://www.able.com:8080/*",
+					"http://www.able.com:8080/*"
 				],
 				"rootUrl": "http://localhost:8080",
 				"secret": "449c61a0-69b5-4202-8470-202b187a9414",
