@@ -642,9 +642,9 @@ definition {
 		property test.liferay.virtual.instance = "false";
 		property test.run.type = "single";
 
-		var openIdConnectClientSecret = PropsUtil.get("openid.provider.keycloak.client.password.1");
+		var openIdConnectClientSecret = PropsUtil.get("openid.provider.default.client.password");
 		var userEmailAddress = "user1";
-		var osgiConfigFileName = "com.liferay.portal.security.sso.openid.connect.internal.configuration.OpenIdConnectProviderConfiguration~default.config";
+		var osgiConfigFileName = "keycloak.json";
 
 		task ("Startup Keycloak for test") {
 			AntCommands.runCommand("build-test-keycloak.xml", "prepare-selenium-keycloak-server");
