@@ -12,7 +12,6 @@ import com.liferay.portal.kernel.util.Validator;
 import java.io.Serializable;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -143,13 +142,9 @@ public class SamlUtil {
 			attributesMap.put(key, values);
 		}
 
-		Collection<Object> values = attributeMappingsProperties.values();
-
-		for (Object value : values) {
-			String valueString = String.valueOf(value);
-
-			if (!attributesMap.containsKey(valueString)) {
-				attributesMap.put(valueString, new ArrayList<>());
+		for (String key : _EXPLICITLY_MAPPED_ATTRIBUTE_NAMES) {
+			if (!attributesMap.containsKey(key)) {
+				attributesMap.put(key, new ArrayList<>());
 			}
 		}
 
@@ -457,5 +452,9 @@ public class SamlUtil {
 
 		return null;
 	}
+
+	private static final String[] _EXPLICITLY_MAPPED_ATTRIBUTE_NAMES = {
+		"membership:userGroups"
+	};
 
 }
