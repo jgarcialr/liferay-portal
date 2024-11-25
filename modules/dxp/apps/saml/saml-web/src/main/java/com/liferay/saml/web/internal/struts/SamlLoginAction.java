@@ -63,13 +63,13 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 		String entityId = ParamUtil.getString(
 			httpServletRequest, "idpEntityId");
 
-		long companyId = _portal.getCompanyId(httpServletRequest);
+		Company company = _portal.getCompany(httpServletRequest);
 
 		if (Validator.isNotNull(entityId)) {
 			httpServletRequest.setAttribute(
 				SamlWebKeys.SAML_SP_IDP_CONNECTION,
 				_samlSpIdpConnectionLocalService.getSamlSpIdpConnection(
-					companyId, entityId));
+					company.getCompanyId(), entityId));
 
 			if (GetterUtil.getBoolean(
 					ParamUtil.getBoolean(httpServletRequest, "forceAuthn"))) {
@@ -85,7 +85,8 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 		}
 
 		List<SamlSpIdpConnection> samlSpIdpConnections = ListUtil.filter(
-			_samlSpIdpConnectionLocalService.getSamlSpIdpConnections(companyId),
+			_samlSpIdpConnectionLocalService.getSamlSpIdpConnections(
+				company.getCompanyId()),
 			samlSpIdpConnection -> isEnabled(
 				samlSpIdpConnection, httpServletRequest));
 
@@ -116,8 +117,6 @@ public class SamlLoginAction extends BaseSamlStrutsAction {
 			ThemeDisplay themeDisplay =
 				(ThemeDisplay)httpServletRequest.getAttribute(
 					WebKeys.THEME_DISPLAY);
-
-			Company company = _portal.getCompany(httpServletRequest);
 
 			String title = _layoutSEOLinkManager.getFullPageTitle(
 				themeDisplay.getLayout(), null, null, null, null,
