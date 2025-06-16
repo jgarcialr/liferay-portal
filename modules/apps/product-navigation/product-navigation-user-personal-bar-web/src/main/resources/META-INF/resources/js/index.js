@@ -54,6 +54,14 @@ export function signInButtonPropsTransformer({
 
 				if (isModalOpen) {
 					updateModalContent(responseHTML);
+					const signInButton = document.getElementsByClassName(
+						'btn disabled btn-primary'
+					)[0];
+
+					if (signInButton) {
+						signInButton.classList.remove('disabled');
+						signInButton.disabled = false;
+					}
 				}
 			})
 			.catch(() => {
