@@ -1,0 +1,5 @@
+Bundle-Name: Liferay Product Analytics Banner Web
+Bundle-SymbolicName: com.liferay.product.analytics.banner.web
+Bundle-Version: 1.0.0
+Web-ContextPath: /product-analytics-banner-web
+-dsannotations-options: inherit
