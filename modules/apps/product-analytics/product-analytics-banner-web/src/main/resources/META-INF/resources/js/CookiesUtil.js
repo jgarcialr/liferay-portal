@@ -11,31 +11,43 @@ import {
 } from 'frontend-js-web';
 
 export const productAnalyticsConfiguredCookieName = 'PRODUCT_ANALYTICS_CONFIGURED';
+export const userConfigCookieName = 'USER_CONSENT_CONFIGURED';
+
 
 export function acceptAllCookies(
 	optionalConsentCookieTypeNames,
 	requiredConsentCookieTypeNames
 ) {
-	optionalConsentCookieTypeNames.forEach((optionalConsentCookieTypeName) => {
-		setCookie(optionalConsentCookieTypeName, 'true');
-	});
+	if (optionalConsentCookieTypeNames) {
+		optionalConsentCookieTypeNames.forEach(
+			(optionalConsentCookieTypeName) => {
+				setCookie(optionalConsentCookieTypeName, 'true');
+			});
+	}
 
-	requiredConsentCookieTypeNames.forEach((requiredConsentCookieTypeName) => {
-		setCookie(requiredConsentCookieTypeName, 'true');
-	});
+	if (requiredConsentCookieTypeNames) {
+		requiredConsentCookieTypeNames.forEach(
+			(requiredConsentCookieTypeName) => {
+				setCookie(requiredConsentCookieTypeName, 'true');
+			});
+	}
 }
 
 export function declineAllCookies(
 	optionalConsentCookieTypeNames,
 	requiredConsentCookieTypeNames
 ) {
-	optionalConsentCookieTypeNames.forEach((optionalConsentCookieTypeName) => {
-		setCookie(optionalConsentCookieTypeName, 'false');
-	});
-
-	requiredConsentCookieTypeNames.forEach((requiredConsentCookieTypeName) => {
-		setCookie(requiredConsentCookieTypeName, 'true');
-	});
+	if (optionalConsentCookieTypeNames) {
+		optionalConsentCookieTypeNames.forEach(
+			(optionalConsentCookieTypeName) => {
+				setCookie(optionalConsentCookieTypeName, 'false');
+			});
+	}
+	if (requiredConsentCookieTypeNames) {
+		requiredConsentCookieTypeNames.forEach((requiredConsentCookieTypeName) => {
+			setCookie(requiredConsentCookieTypeName, 'true');
+		});
+	}
 }
 
 export function getCookie(name) {

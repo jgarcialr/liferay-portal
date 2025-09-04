@@ -12,7 +12,7 @@ import {
 	getCookie,
 	setCookie,
 	setProductAnalyticsConfigCookie,
-	productAnalyticsConfiguredCookieName,
+	productAnalyticsConfiguredCookieName, userConfigCookieName,
 } from '../../js/CookiesUtil';
 
 let openProductAnalyticsConsentModal = () => {
@@ -46,12 +46,14 @@ export default function ({
 
 		const cookiePreferences = {};
 
-		optionalConsentCookieTypeNames.forEach(
-			(optionalConsentCookieTypeName) => {
-				cookiePreferences[optionalConsentCookieTypeName] =
-					getCookie(optionalConsentCookieTypeName) || 'false';
-			}
-		);
+		if(optionalConsentCookieTypeNames) {
+			optionalConsentCookieTypeNames.forEach(
+				(optionalConsentCookieTypeName) => {
+					cookiePreferences[optionalConsentCookieTypeName] =
+						getCookie(optionalConsentCookieTypeName) || 'false';
+				}
+			);
+		}
 
 		Liferay.on('cookiePreferenceUpdate', (event) => {
 			cookiePreferences[event.key] = event.value;
@@ -66,6 +68,7 @@ export default function ({
 			);
 
 			setProductAnalyticsConfigCookie();
+			setBannerVisibility(productAnalyticsBanner);
 		});
 
 		openProductAnalyticsConsentModal = ({
@@ -154,6 +157,7 @@ export default function ({
 				);
 
 				setProductAnalyticsConfigCookie();
+				setBannerVisibility(productAnalyticsBanner);
 			});
 		}
 	}
@@ -185,11 +189,19 @@ function isCookieTypesAccepted(cookieTypes) {
 }
 
 function setBannerVisibility(productAnalyticsBanner) {
+	const cookieBanner = document.querySelector('.cookies-banner');
 	if (getCookie(productAnalyticsConfiguredCookieName)) {
 		productAnalyticsBanner.style.display = 'none';
+		if(getCookie(userConfigCookieName)){
+			cookieBanner.style.display = 'none';
+
+		}else{
+			cookieBanner.style.display = 'block';
+		}
 	}
 	else {
 		productAnalyticsBanner.style.display = 'block';
+		cookieBanner.style.display = 'none';
 	}
 }
 
