@@ -26,9 +26,14 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.model.CompanyConstants;
+import com.liferay.portal.kernel.module.configuration.ConfigurationException;
 import com.liferay.portal.kernel.security.auth.CompanyThreadLocal;
 import com.liferay.portal.kernel.service.CompanyLocalService;
+import com.liferay.portal.kernel.service.ServiceContext;
+import com.liferay.portal.kernel.service.ServiceContextFactory;
+import com.liferay.portal.kernel.service.ServiceContextThreadLocal;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.servlet.SessionErrors;
 import com.liferay.portal.kernel.util.Base64;
 import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.MapUtil;
@@ -68,7 +73,7 @@ public class OpenIdConnectProviderPortalInstanceLifecycleListener
 	implements EveryNodeEveryStartup {
 
 	@Override
-	public void portalInstanceRegistered(Company company) throws Exception {
+	public void portalInstanceRegistered(Company company) {
 		if (!_clusterMasterExecutor.isMaster()) {
 			return;
 		}
@@ -78,8 +83,13 @@ public class OpenIdConnectProviderPortalInstanceLifecycleListener
 				if (GetterUtil.getLong(properties.get("companyId")) ==
 						CompanyConstants.SYSTEM) {
 
-					_updateOAuthClientEntry(
-						company.getCompanyId(), null, properties);
+					try {
+						_updateOAuthClientEntry(
+							company.getCompanyId(), null, properties);
+					}
+					catch (Exception exception) {
+						exception.printStackTrace();
+					}
 				}
 			});
 	}
@@ -435,7 +445,7 @@ public class OpenIdConnectProviderPortalInstanceLifecycleListener
 
 	private void _updateOAuthClientEntry(
 		long companyId, Dictionary<String, ?> oldProperties,
-		Dictionary<String, ?> properties) {
+		Dictionary<String, ?> properties) throws Exception {
 
 		long guestUserId = 0;
 
@@ -490,6 +500,7 @@ public class OpenIdConnectProviderPortalInstanceLifecycleListener
 			if (_log.isDebugEnabled()) {
 				_log.debug("Unable to update OAuth client entry", exception);
 			}
+			throw new Exception(exception);
 		}
 	}
 
@@ -575,6 +586,9 @@ public class OpenIdConnectProviderPortalInstanceLifecycleListener
 						companyId)) {
 
 				_updateOAuthClientEntry(companyId, oldProperties, properties);
+			}
+			catch (Exception exception) {
+				_log.error(exception);
 			}
 		}
 

@@ -18,34 +18,31 @@ import com.liferay.oauth.client.persistence.service.base.OAuthClientEntryLocalSe
 import com.liferay.petra.sql.dsl.DSLQueryFactoryUtil;
 import com.liferay.portal.aop.AopService;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.json.JSONFactoryUtil;
 import com.liferay.portal.kernel.model.GroupConstants;
 import com.liferay.portal.kernel.model.ResourceConstants;
 import com.liferay.portal.kernel.model.User;
 import com.liferay.portal.kernel.service.ResourceLocalService;
 import com.liferay.portal.kernel.service.UserLocalService;
+import com.liferay.portal.kernel.util.Http;
+import com.liferay.portal.kernel.util.HttpUtil;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
-
 import com.nimbusds.oauth2.sdk.ParseException;
 import com.nimbusds.oauth2.sdk.ResponseType;
 import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.client.ClientInformation;
 import com.nimbusds.oauth2.sdk.client.ClientMetadata;
-import com.nimbusds.oauth2.sdk.http.HTTPRequest;
 import com.nimbusds.oauth2.sdk.http.HTTPResponse;
 import com.nimbusds.oauth2.sdk.util.JSONObjectUtils;
 import com.nimbusds.openid.connect.sdk.rp.OIDCClientInformation;
-
-import java.net.URI;
-import java.net.URL;
-
-import java.util.List;
-
 import net.minidev.json.JSONArray;
 import net.minidev.json.JSONObject;
-
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+
+import java.net.URI;
+import java.util.List;
 
 /**
  * @author Arthur Chan
@@ -331,14 +328,18 @@ public class OAuthClientEntryLocalServiceImpl
 				return;
 			}
 
-			HTTPRequest httpRequest = new HTTPRequest(
-				HTTPRequest.Method.GET, new URL(authServerWellKnownURI));
+			Http.Options options = new Http.Options();
+			options.setLocation(authServerWellKnownURI);
 
-			HTTPResponse httpResponse = httpRequest.send();
+			String content = HttpUtil.URLtoString(options);
 
-			if (httpResponse.getStatusCode() != HTTPResponse.SC_OK) {
+			Http.Response response = options.getResponse();
+			int responseCode = response.getResponseCode();
+
+			if (responseCode != HTTPResponse.SC_OK) {
 				throw new OAuthClientEntryAuthServerWellKnownURIException(
-					httpResponse.getStatusMessage());
+					content
+				);
 			}
 		}
 		catch (Exception exception) {
