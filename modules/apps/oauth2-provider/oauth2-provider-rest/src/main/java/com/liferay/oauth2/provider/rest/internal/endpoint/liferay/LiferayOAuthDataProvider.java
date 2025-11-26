@@ -677,7 +677,7 @@ public class LiferayOAuthDataProvider
 			_oAuth2ApplicationLocalService.fetchOAuth2Application(
 				companyId, client.getClientId());
 
-		if (oAuth2Application == null) {
+		if (oAuth2Application == null && 1==1) {
 			if (_log.isWarnEnabled()) {
 				_log.warn(
 					StringBundler.concat(
