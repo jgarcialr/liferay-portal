@@ -16,6 +16,7 @@ import com.liferay.portal.kernel.json.JSONException;
 import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.User;
+import com.liferay.portal.kernel.security.permission.ActionKeys;
 import com.liferay.portal.kernel.security.permission.PermissionCheckerFactory;
 import com.liferay.portal.kernel.security.permission.resource.ModelResourcePermission;
 import com.liferay.portal.kernel.service.UserLocalService;
@@ -101,7 +102,8 @@ public class DynamicRegistrationServiceContainerRequestFilter
 			long expirationTime = GetterUtil.getLong(jwtToken.getClaim("exp"));
 
 			if (currentTime > expirationTime) {
-				throw ExceptionUtils.toNotAuthorizedException(null, null);
+				throw ExceptionUtils.toNotAuthorizedException(
+					null, null);
 			}
 
 			user = _getUser(GetterUtil.getLong(jwtToken.getClaim("sub")));
@@ -112,13 +114,22 @@ public class DynamicRegistrationServiceContainerRequestFilter
 					GetterUtil.getString(jwtToken.getClaim("client_id")));
 
 			if ((oAuth2Application == null) ||
-				!StringUtil.equals(
-					OAuth2ApplicationConstants.NAME_DYNAMIC_REGISTRATOR,
-					oAuth2Application.getName()) ||
+				((StringUtil.equalsIgnoreCase(
+					httpServletRequest.getMethod(), "POST") ||
+				  StringUtil.equalsIgnoreCase(
+					  httpServletRequest.getMethod(), "GET")) &&
+				 !StringUtil.equalsIgnoreCase(
+					 OAuth2ApplicationConstants.
+						 NAME_DYNAMIC_REGISTRATOR,
+					 oAuth2Application.getName())) ||
 				!_containsOAuth2RegisterApplicationPermission(
-					oAuth2Application, user)) {
-
-				throw ExceptionUtils.toNotAuthorizedException(null, null);
+					oAuth2Application, user) ||
+				(StringUtil.equalsIgnoreCase(
+					httpServletRequest.getMethod(), "DELETE") &&
+				 !_containsOAuth2DeleteApplicationPermission(
+					 oAuth2Application, user))) {
+				throw ExceptionUtils.toNotAuthorizedException(
+					null, null);
 			}
 		}
 		catch (JSONException jsonException) {
@@ -171,6 +182,19 @@ public class DynamicRegistrationServiceContainerRequestFilter
 					Response.Status.INTERNAL_SERVER_ERROR
 				).build());
 		}
+	}
+
+	private boolean _containsOAuth2DeleteApplicationPermission(
+			OAuth2Application oAuth2Application, User user)
+		throws Exception {
+
+		if (oAuth2Application == null) {
+			return false;
+		}
+
+		return _oAuth2ApplicationModelResourcePermission.contains(
+			_permissionCheckerFactory.create(user), oAuth2Application,
+			ActionKeys.DELETE);
 	}
 
 	private boolean _containsOAuth2RegisterApplicationPermission(
