@@ -54,8 +54,6 @@ public class LiferayDynamicRegistrationService
 		Response.ResponseBuilder responseBuilder = JAXRSUtils.toResponseBuilder(
 			204);
 
-		responseBuilder.type(MediaType.APPLICATION_JSON);
-
 		return responseBuilder.build();
 	}
 

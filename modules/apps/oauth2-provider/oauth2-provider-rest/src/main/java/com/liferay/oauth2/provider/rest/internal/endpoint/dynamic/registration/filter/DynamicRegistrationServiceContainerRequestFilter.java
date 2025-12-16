@@ -102,8 +102,7 @@ public class DynamicRegistrationServiceContainerRequestFilter
 			long expirationTime = GetterUtil.getLong(jwtToken.getClaim("exp"));
 
 			if (currentTime > expirationTime) {
-				throw ExceptionUtils.toNotAuthorizedException(
-					null, null);
+				throw ExceptionUtils.toNotAuthorizedException(null, null);
 			}
 
 			user = _getUser(GetterUtil.getLong(jwtToken.getClaim("sub")));
@@ -119,8 +118,7 @@ public class DynamicRegistrationServiceContainerRequestFilter
 				  StringUtil.equalsIgnoreCase(
 					  httpServletRequest.getMethod(), "GET")) &&
 				 !StringUtil.equalsIgnoreCase(
-					 OAuth2ApplicationConstants.
-						 NAME_DYNAMIC_REGISTRATOR,
+					 OAuth2ApplicationConstants.NAME_DYNAMIC_REGISTRATOR,
 					 oAuth2Application.getName())) ||
 				!_containsOAuth2RegisterApplicationPermission(
 					oAuth2Application, user) ||
@@ -128,8 +126,8 @@ public class DynamicRegistrationServiceContainerRequestFilter
 					httpServletRequest.getMethod(), "DELETE") &&
 				 !_containsOAuth2DeleteApplicationPermission(
 					 oAuth2Application, user))) {
-				throw ExceptionUtils.toNotAuthorizedException(
-					null, null);
+
+				throw ExceptionUtils.toNotAuthorizedException(null, null);
 			}
 		}
 		catch (JSONException jsonException) {

@@ -804,6 +804,32 @@ public class LiferayOAuthDataProvider
 					client.getApplicationName(), properties.get("tos_uri"),
 					client.getRedirectUris(), false,
 					client.getRegisteredScopes(), false, new ServiceContext());
+
+				String tokenKey = client.getProperties(
+				).get(
+					"registration_access_token"
+				);
+
+				OAuth2Authorization oAuth2Authorization =
+					_oAuth2AuthorizationLocalService.
+						fetchOAuth2AuthorizationByAccessTokenContent(tokenKey);
+
+				if (oAuth2Authorization == null) {
+					String remoteAddr = properties.get(
+						OAuth2ProviderRESTEndpointConstants.
+							PROPERTY_KEY_CLIENT_REMOTE_ADDR);
+					String remoteHost = properties.get(
+						OAuth2ProviderRESTEndpointConstants.
+							PROPERTY_KEY_CLIENT_REMOTE_HOST);
+
+					_oAuth2AuthorizationLocalService.addOAuth2Authorization(
+						oAuth2Application.getCompanyId(), user.getUserId(),
+						user.getScreenName(),
+						oAuth2Application.getOAuth2ApplicationId(),
+						oAuth2Application.getOAuth2ApplicationScopeAliasesId(),
+						tokenKey, createDate, expirationDate, remoteHost,
+						remoteAddr, null, null, null);
+				}
 			}
 			catch (PortalException portalException) {
 				if (_log.isDebugEnabled()) {
@@ -1525,10 +1551,6 @@ public class LiferayOAuthDataProvider
 						 (allowedGrantType == GrantType.JWT_BEARER)) {
 
 					clientGrantTypes.add(Constants.JWT_BEARER_GRANT);
-					clientGrantTypes.add(
-						HttpUtils.urlEncode(
-							Constants.JWT_BEARER_GRANT,
-							StandardCharsets.UTF_8.name()));
 				}
 				else if (oAuth2ProviderConfiguration.
 							allowResourceOwnerPasswordCredentialsGrant() &&
