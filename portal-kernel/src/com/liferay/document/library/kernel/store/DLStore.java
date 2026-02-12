@@ -8,11 +8,10 @@ package com.liferay.document.library.kernel.store;
 import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.transaction.Transactional;
+import org.osgi.annotation.versioning.ProviderType;
 
 import java.io.File;
 import java.io.InputStream;
-
-import org.osgi.annotation.versioning.ProviderType;
 
 /**
  * @author Brian Wing Shun Chan
@@ -31,6 +30,10 @@ public interface DLStore {
 		throws PortalException;
 
 	public void addFile(DLStoreRequest dlStoreRequest, InputStream inputStream)
+		throws PortalException;
+
+	public void copyFileVersion(
+		DLStoreRequest dlStoreRequest, String toVersionLabel)
 		throws PortalException;
 
 	public void copyFileVersion(
