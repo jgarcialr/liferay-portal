@@ -25,15 +25,14 @@ import com.liferay.portal.kernel.security.auth.PrincipalException;
 import com.liferay.portal.kernel.security.permission.PermissionChecker;
 import com.liferay.portal.kernel.security.permission.PermissionThreadLocal;
 import com.liferay.portal.kernel.transaction.TransactionCommitCallbackUtil;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
+import org.osgi.service.component.annotations.Reference;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
 
 /**
  * @author Raymond Augé
@@ -137,6 +136,21 @@ public class AntivirusAsyncDLStore implements DLStore {
 				tempFile.delete();
 			}
 		}
+	}
+
+	@Override
+	public void copyFileVersion(
+		DLStoreRequest dlStoreRequest, String toVersionLabel)
+		throws PortalException {
+
+		InputStream inputStream = _store.getFileAsStream(
+			dlStoreRequest.getCompanyId(), dlStoreRequest.getRepositoryId(), dlStoreRequest.getFileName(), dlStoreRequest.getVersionLabel());
+
+		if (inputStream == null) {
+			inputStream = new UnsyncByteArrayInputStream(new byte[0]);
+		}
+
+		addFile(dlStoreRequest, inputStream);
 	}
 
 	@Override
