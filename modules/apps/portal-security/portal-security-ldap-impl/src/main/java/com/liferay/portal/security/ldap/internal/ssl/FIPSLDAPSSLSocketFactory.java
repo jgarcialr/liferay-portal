@@ -1,0 +1,176 @@
+/**
+ * SPDX-FileCopyrightText: (c) 2000 Liferay, Inc. https://liferay.com
+ * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
+ */
+
+package com.liferay.portal.security.ldap.internal.ssl;
+
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
+
+import java.io.IOException;
+
+import java.net.InetAddress;
+import java.net.Socket;
+
+import java.security.GeneralSecurityException;
+
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import javax.net.SocketFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
+
+/**
+ * SocketFactory wired into JNDI via the {@code java.naming.ldap.factory.socket}
+ * environment property. Constrains every LDAPS connection to TLS 1.2/1.3 and a
+ * FIPS-approved cipher suite allowlist, intersected with what the installed
+ * JSSE provider actually supports.
+ *
+ * <p>
+ * An operator-configured override (via
+ * {@link com.liferay.portal.security.ldap.configuration.SystemLDAPConfiguration#fipsCipherSuites()})
+ * is passed in through {@link #setCipherSuitesOverride(String[])} immediately
+ * before {@code InitialLdapContext} is constructed, and cleared afterwards.
+ * </p>
+ *
+ * @author Jorge Garc&iacute;a Jim&eacute;nez
+ */
+public class FIPSLDAPSSLSocketFactory extends SocketFactory {
+
+	public static SocketFactory getDefault() {
+		return _INSTANCE;
+	}
+
+	public static void setCipherSuitesOverride(String[] cipherSuites) {
+		if ((cipherSuites == null) || (cipherSuites.length == 0)) {
+			_cipherSuitesOverride.remove();
+		}
+		else {
+			_cipherSuitesOverride.set(cipherSuites.clone());
+		}
+	}
+
+	public FIPSLDAPSSLSocketFactory() {
+	}
+
+	@Override
+	public Socket createSocket() throws IOException {
+		return _constrain((SSLSocket)_delegate().createSocket());
+	}
+
+	@Override
+	public Socket createSocket(InetAddress address, int port)
+		throws IOException {
+
+		return _constrain(
+			(SSLSocket)_delegate().createSocket(address, port));
+	}
+
+	@Override
+	public Socket createSocket(
+			InetAddress address, int port, InetAddress localAddress,
+			int localPort)
+		throws IOException {
+
+		return _constrain(
+			(SSLSocket)_delegate().createSocket(
+				address, port, localAddress, localPort));
+	}
+
+	@Override
+	public Socket createSocket(String host, int port) throws IOException {
+		return _constrain((SSLSocket)_delegate().createSocket(host, port));
+	}
+
+	@Override
+	public Socket createSocket(
+			String host, int port, InetAddress localAddress, int localPort)
+		throws IOException {
+
+		return _constrain(
+			(SSLSocket)_delegate().createSocket(
+				host, port, localAddress, localPort));
+	}
+
+	private SSLSocket _constrain(SSLSocket sslSocket) {
+		sslSocket.setEnabledProtocols(
+			intersect(ENABLED_PROTOCOLS, sslSocket.getSupportedProtocols()));
+
+		String[] cipherSuitesOverride = _cipherSuitesOverride.get();
+
+		String[] desired = (cipherSuitesOverride != null) ?
+			cipherSuitesOverride : FIPS_CIPHER_SUITES_ALLOWLIST;
+
+		String[] enabled = intersect(
+			desired, sslSocket.getSupportedCipherSuites());
+
+		if (enabled.length == 0) {
+			throw new IllegalStateException(
+				"No FIPS-approved cipher suites are supported by the " +
+					"installed JSSE provider; check the FIPS JCE/JSSE " +
+						"configuration");
+		}
+
+		sslSocket.setEnabledCipherSuites(enabled);
+
+		return sslSocket;
+	}
+
+	private SSLSocketFactory _delegate() {
+		try {
+			SSLContext sslContext = SSLContext.getInstance("TLS");
+
+			sslContext.init(null, null, null);
+
+			return sslContext.getSocketFactory();
+		}
+		catch (GeneralSecurityException generalSecurityException) {
+			_log.error(
+				"Unable to initialize FIPS LDAP SSL context",
+				generalSecurityException);
+
+			throw new IllegalStateException(generalSecurityException);
+		}
+	}
+
+	static String[] intersect(String[] desired, String[] supported) {
+		Set<String> supportedSet = new LinkedHashSet<>(
+			Arrays.asList(supported));
+
+		Set<String> result = new LinkedHashSet<>();
+
+		for (String candidate : desired) {
+			if (supportedSet.contains(candidate)) {
+				result.add(candidate);
+			}
+		}
+
+		return result.toArray(new String[0]);
+	}
+
+	static final String[] ENABLED_PROTOCOLS = {"TLSv1.2", "TLSv1.3"};
+
+	// NIST SP 800-52 Rev. 2 approved AEAD suites for TLS 1.2/1.3
+
+	static final String[] FIPS_CIPHER_SUITES_ALLOWLIST = {
+		"TLS_AES_128_GCM_SHA256", "TLS_AES_256_GCM_SHA384",
+		"TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256",
+		"TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384",
+		"TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256",
+		"TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384"
+	};
+
+	private static final FIPSLDAPSSLSocketFactory _INSTANCE =
+		new FIPSLDAPSSLSocketFactory();
+
+	private static final Log _log = LogFactoryUtil.getLog(
+		FIPSLDAPSSLSocketFactory.class);
+
+	private static final ThreadLocal<String[]> _cipherSuitesOverride =
+		new ThreadLocal<>();
+
+}
