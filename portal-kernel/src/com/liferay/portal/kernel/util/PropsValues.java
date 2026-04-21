@@ -2014,6 +2014,10 @@ public class PropsValues {
 			PropsUtil.get(PropsKeys.SEARCH_CONTAINER_SHOW_PAGINATION_TOP_DELTA),
 			10);
 
+	public static final boolean SECURITY_FIPS_MODE_ENABLED =
+		GetterUtil.getBoolean(
+			PropsUtil.get(PropsKeys.SECURITY_FIPS_MODE_ENABLED));
+
 	public static final String[] SERVLET_SERVICE_EVENTS_POST =
 		PropsUtil.getArray(PropsKeys.SERVLET_SERVICE_EVENTS_POST);
 
