@@ -23,14 +23,7 @@ if (credentials.equals(Portal.TEMP_OBFUSCATION_VALUE)) {
 	credentials = ldapServerConfiguration.securityCredential();
 }
 
-boolean fipsRejected =
-	FIPSModeUtil.isEnabled() &&
-	((baseProviderURL == null) ||
-	 !StringUtil.toLowerCase(
-		 baseProviderURL
-	 ).startsWith(
-		 "ldaps://"
-	 ));
+boolean fipsRejected = FIPSModeUtil.isEnabled() && !StringUtil.startsWith(baseProviderURL, "ldaps://");
 
 SafeLdapContext safeLdapContext = null;
 

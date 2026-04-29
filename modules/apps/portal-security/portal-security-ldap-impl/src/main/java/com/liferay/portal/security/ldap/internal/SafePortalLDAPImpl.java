@@ -1106,15 +1106,7 @@ public class SafePortalLDAPImpl implements SafePortalLDAP {
 	}
 
 	private boolean _isLDAPS(String providerURL) {
-		if (Validator.isNull(providerURL)) {
-			return false;
-		}
-
-		return StringUtil.toLowerCase(
-			providerURL
-		).startsWith(
-			"ldaps://"
-		);
+		return StringUtil.startsWith(providerURL, "ldaps://");
 	}
 
 	private static final Log _log = LogFactoryUtil.getLog(

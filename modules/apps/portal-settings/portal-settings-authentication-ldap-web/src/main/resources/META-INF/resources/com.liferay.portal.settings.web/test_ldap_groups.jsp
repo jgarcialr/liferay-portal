@@ -22,13 +22,7 @@ if (credentials.equals(Portal.TEMP_OBFUSCATION_VALUE)) {
 	credentials = ldapServerConfiguration.securityCredential();
 }
 
-if (FIPSModeUtil.isEnabled() &&
-	((baseProviderURL == null) ||
-	 !StringUtil.toLowerCase(
-		 baseProviderURL
-	 ).startsWith(
-		 "ldaps://"
-	 ))) {
+if (FIPSModeUtil.isEnabled() && !StringUtil.startsWith(baseProviderURL, "ldaps://")) {
 %>
 
 	<liferay-ui:message key="fips-mode-requires-the-ldaps-scheme-for-ldap-connections" />

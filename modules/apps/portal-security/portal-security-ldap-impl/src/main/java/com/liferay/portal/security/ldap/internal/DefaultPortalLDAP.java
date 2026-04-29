@@ -129,14 +129,7 @@ public class DefaultPortalLDAP implements PortalLDAP {
 
 		boolean fipsEnabled = FIPSModeUtil.isEnabled();
 
-		if (fipsEnabled &&
-			((providerURL == null) ||
-			 !StringUtil.toLowerCase(
-				 providerURL
-			 ).startsWith(
-				 "ldaps://"
-			 ))) {
-
+		if (fipsEnabled && !StringUtil.startsWith(providerURL, "ldaps://")) {
 			_log.error(
 				"FIPS mode requires LDAP base provider URL to use the " +
 					"ldaps:// scheme: " + providerURL);

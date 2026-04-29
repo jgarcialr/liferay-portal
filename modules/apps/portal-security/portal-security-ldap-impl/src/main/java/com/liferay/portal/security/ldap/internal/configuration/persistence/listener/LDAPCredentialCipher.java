@@ -12,7 +12,7 @@ import com.liferay.portal.kernel.log.Log;
 import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.model.Company;
 import com.liferay.portal.kernel.service.CompanyLocalService;
-import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.util.StringUtil;
 
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -30,8 +30,8 @@ import org.osgi.service.component.annotations.Reference;
 public class LDAPCredentialCipher {
 
 	public String resolve(long companyId, String value) {
-		if (Validator.isNull(value) ||
-			!value.startsWith(
+		if (!StringUtil.startsWith(
+				value,
 				LDAPServerCredentialEncryptionConfigurationModelListener.
 					ENCRYPTED_VALUE_PREFIX)) {
 
