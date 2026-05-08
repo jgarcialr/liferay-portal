@@ -5,6 +5,7 @@
 
 package com.liferay.portal.security.ldap.internal.configuration.persistence.listener;
 
+import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListener;
 import com.liferay.portal.configuration.persistence.listener.ConfigurationModelListenerException;
 import com.liferay.portal.kernel.security.fips.FIPSModeUtil;
@@ -49,8 +50,9 @@ public class FIPSLDAPServerConfigurationModelListener
 
 		if (!StringUtil.startsWith(baseProviderURL, "ldaps://")) {
 			throw new LocalizedLDAPConfigurationModelListenerException(
-				"FIPS mode requires LDAP base provider URL to use the " +
-					"ldaps:// scheme: " + baseProviderURL,
+				StringBundler.concat(
+					"FIPS mode requires LDAP base provider URL to use the ",
+					"\"ldaps://\" scheme: \"", baseProviderURL, "\""),
 				"fips-mode-requires-the-ldaps-scheme-for-the-base-provider-" +
 					"url-x",
 				new Object[] {baseProviderURL}, LDAPServerConfiguration.class,

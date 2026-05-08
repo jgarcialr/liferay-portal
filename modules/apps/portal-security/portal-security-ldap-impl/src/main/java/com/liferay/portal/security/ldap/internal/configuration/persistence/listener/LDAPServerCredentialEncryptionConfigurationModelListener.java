@@ -63,7 +63,8 @@ public class LDAPServerCredentialEncryptionConfigurationModelListener
 
 		if (companyId <= 0) {
 			throw new ConfigurationModelListenerException(
-				"Cannot encrypt LDAP security credential: missing companyId",
+				"Cannot encrypt LDAP security credential: missing " +
+					"\"companyId\"",
 				LDAPServerConfiguration.class, getClass(), properties);
 		}
 

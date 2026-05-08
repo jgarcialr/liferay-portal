@@ -425,8 +425,9 @@ public class SafePortalLDAPImpl implements SafePortalLDAP {
 
 		if (fipsEnabled && !_isLDAPS(providerURL)) {
 			_log.error(
-				"FIPS mode requires LDAP base provider URL to use the " +
-					"ldaps:// scheme: " + providerURL);
+				StringBundler.concat(
+					"FIPS mode requires LDAP base provider URL to use the ",
+					"\"ldaps://\" scheme: \"", providerURL, "\""));
 
 			return null;
 		}
