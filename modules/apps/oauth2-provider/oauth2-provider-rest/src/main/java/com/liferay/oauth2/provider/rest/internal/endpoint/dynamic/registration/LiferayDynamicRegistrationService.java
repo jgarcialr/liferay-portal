@@ -596,12 +596,13 @@ public class LiferayDynamicRegistrationService
 		return false;
 	}
 
-	private Set<String> _normalizeOpenRegistrationAllowList(
-		String[] allowedValues, String emptyAllowListMessage, String error) {
+	private Set<String> _normalizeOpenRegistrationAllowedValues(
+		String[] allowedValues, String emptyAllowedValuesMessage,
+		String error) {
 
 		if (allowedValues == null) {
 			OAuth2ErrorUtil.reportInvalidRequestError(
-				emptyAllowListMessage, error, Response.Status.BAD_REQUEST);
+				emptyAllowedValuesMessage, error, Response.Status.BAD_REQUEST);
 		}
 
 		Set<String> normalizedValues = new HashSet<>();
@@ -626,7 +627,7 @@ public class LiferayDynamicRegistrationService
 
 		if (normalizedValues.isEmpty()) {
 			OAuth2ErrorUtil.reportInvalidRequestError(
-				emptyAllowListMessage, error, Response.Status.BAD_REQUEST);
+				emptyAllowedValuesMessage, error, Response.Status.BAD_REQUEST);
 		}
 
 		return normalizedValues;
@@ -785,7 +786,7 @@ public class LiferayDynamicRegistrationService
 		String[] allowedGrantTypes, Client client) {
 
 		Set<String> normalizedAllowedGrantTypes =
-			_normalizeOpenRegistrationAllowList(
+			_normalizeOpenRegistrationAllowedValues(
 				allowedGrantTypes,
 				"Grant types are not allowed for open registration",
 				OAuth2ProviderRESTEndpointConstants.
@@ -846,7 +847,7 @@ public class LiferayDynamicRegistrationService
 		String[] allowedPatterns, ClientRegistration clientRegistration) {
 
 		Set<String> normalizedAllowedPatterns =
-			_normalizeOpenRegistrationAllowList(
+			_normalizeOpenRegistrationAllowedValues(
 				allowedPatterns,
 				"Redirect URIs are not allowed for open registration",
 				OAuth2ProviderRESTEndpointConstants.ERROR_INVALID_REDIRECT_URI);
@@ -912,7 +913,7 @@ public class LiferayDynamicRegistrationService
 		}
 
 		Set<String> normalizedAllowedScopes =
-			_normalizeOpenRegistrationAllowList(
+			_normalizeOpenRegistrationAllowedValues(
 				allowedScopes, "Scopes are not allowed for open registration",
 				OAuthConstants.INVALID_SCOPE);
 
