@@ -787,7 +787,7 @@ public class LiferayDynamicRegistrationService
 		Set<String> normalizedAllowedGrantTypes =
 			_normalizeOpenRegistrationAllowList(
 				allowedGrantTypes,
-				"Open registration does not allow any grant type",
+				"Grant types are not allowed for open registration",
 				OAuth2ProviderRESTEndpointConstants.
 					ERROR_INVALID_CLIENT_METADATA);
 
@@ -848,7 +848,7 @@ public class LiferayDynamicRegistrationService
 		Set<String> normalizedAllowedPatterns =
 			_normalizeOpenRegistrationAllowList(
 				allowedPatterns,
-				"Open registration does not allow any redirect URI",
+				"Redirect URIs are not allowed for open registration",
 				OAuth2ProviderRESTEndpointConstants.ERROR_INVALID_REDIRECT_URI);
 
 		if (normalizedAllowedPatterns == null) {
@@ -913,7 +913,7 @@ public class LiferayDynamicRegistrationService
 
 		Set<String> normalizedAllowedScopes =
 			_normalizeOpenRegistrationAllowList(
-				allowedScopes, "Open registration does not allow any scope",
+				allowedScopes, "Scopes are not allowed for open registration",
 				OAuthConstants.INVALID_SCOPE);
 
 		if (normalizedAllowedScopes == null) {
