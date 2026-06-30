@@ -235,21 +235,30 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			"dynamic.registration.allowed.grant.types",
 			new String[] {OAuthConstants.CLIENT_CREDENTIALS_GRANT});
 		_testOpenRegistrationIsRejected(
-			400, "invalid_client_metadata", _createOpenRegistrationJSONObject().toString(), "dynamic.registration.allowed.scopes",
+			400, "invalid_client_metadata",
+			_createOpenRegistrationJSONObject().toString(),
+			"dynamic.registration.allowed.scopes",
 			new String[] {"Liferay.Headless.Delivery.everything"});
 
 		_testOpenRegistrationIsRejected(
-			400, "invalid_redirect_uri", _createOpenRegistrationJSONObject("").toString(),
+			400, "invalid_redirect_uri",
+			_createOpenRegistrationJSONObject(
+				""
+			).toString(),
 			"dynamic.registration.allowed.redirect.uri.patterns",
 			new String[] {"https://*.example.org/*"});
 		_testOpenRegistrationIsRejected(
 			400, "invalid_redirect_uri",
-			_createOpenRegistrationJSONObject("https://attacker.test/callback").toString(),
+			_createOpenRegistrationJSONObject(
+				"https://attacker.test/callback"
+			).toString(),
 			"dynamic.registration.allowed.redirect.uri.patterns",
 			new String[] {"https://*.example.org/*"});
 		_testOpenRegistrationIsRejected(
 			400, "invalid_redirect_uri",
-			_createOpenRegistrationJSONObject("https://attacker.test/foo.example.org/callback").toString(),
+			_createOpenRegistrationJSONObject(
+				"https://attacker.test/foo.example.org/callback"
+			).toString(),
 			"dynamic.registration.allowed.redirect.uri.patterns",
 			new String[] {"https://*.example.org/*"});
 
@@ -267,7 +276,9 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			new String[] {"Liferay.Headless.Delivery.everything"});
 
 		_testOpenRegistrationIsRejected(
-			400, "invalid_client_metadata", _createOpenRegistrationJSONObject().toString(), "dynamic.registration.allowed.scopes",
+			400, "invalid_client_metadata",
+			_createOpenRegistrationJSONObject().toString(),
+			"dynamic.registration.allowed.scopes",
 			new String[] {StringPool.STAR});
 
 		_testOpenRegistrationIsRejected(
@@ -476,6 +487,39 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 		return new DynamicRegistrationServiceTestPreparatorBundleActivator();
 	}
 
+	private CompanyConfigurationTemporarySwapper
+			_createCompanyConfigurationTemporarySwapper(
+				long companyId, Object... overrides)
+		throws Exception {
+
+		Dictionary<String, Object> properties =
+			HashMapDictionaryBuilder.<String, Object>put(
+				"dynamic.registration.allowed.grant.types",
+				new String[] {StringPool.STAR}
+			).put(
+				"dynamic.registration.allowed.hosts",
+				new String[] {StringPool.STAR}
+			).put(
+				"dynamic.registration.allowed.redirect.uri.patterns",
+				new String[] {StringPool.STAR}
+			).put(
+				"dynamic.registration.allowed.scopes",
+				new String[] {StringPool.STAR}
+			).put(
+				"dynamic.registration.require.initial.access.token", false
+			).build();
+
+		for (int i = 0; i < overrides.length; i += 2) {
+			properties.put((String)overrides[i], overrides[i + 1]);
+		}
+
+		return new CompanyConfigurationTemporarySwapper(
+			companyId,
+			"com.liferay.oauth2.provider.rest.internal.configuration." +
+				"OAuth2DynamicRegistrationConfiguration",
+			properties);
+	}
+
 	private JSONObject _createOpenRegistrationJSONObject() {
 		return _createOpenRegistrationJSONObject(
 			"https://" + RandomTestUtil.randomString() + ".com/callback");
@@ -492,36 +536,6 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 		).put(
 			"response_types", new String[] {OAuthConstants.CODE_RESPONSE_TYPE}
 		);
-	}
-
-	private CompanyConfigurationTemporarySwapper
-			_createCompanyConfigurationTemporarySwapper(
-				long companyId, Object... overrides)
-		throws Exception {
-
-		Dictionary<String, Object> properties =
-			HashMapDictionaryBuilder.<String, Object>put(
-				"dynamic.registration.allowed.grant.types", new String[] {StringPool.STAR}
-			).put(
-				"dynamic.registration.allowed.hosts", new String[] {StringPool.STAR}
-			).put(
-				"dynamic.registration.allowed.redirect.uri.patterns",
-				new String[] {StringPool.STAR}
-			).put(
-				"dynamic.registration.allowed.scopes", new String[] {StringPool.STAR}
-			).put(
-				"dynamic.registration.require.initial.access.token", false
-			).build();
-
-		for (int i = 0; i < overrides.length; i += 2) {
-			properties.put((String)overrides[i], overrides[i + 1]);
-		}
-
-		return new CompanyConfigurationTemporarySwapper(
-			companyId,
-			"com.liferay.oauth2.provider.rest.internal.configuration." +
-				"OAuth2DynamicRegistrationConfiguration",
-			properties);
 	}
 
 	private JSONObject _createRegistrationJSONObject(
@@ -607,7 +621,8 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 		try (CompanyConfigurationTemporarySwapper
 				companyConfigurationTemporarySwapper =
 					_createCompanyConfigurationTemporarySwapper(
-						TestPropsValues.getCompanyId(), "dynamic.registration.allowed.hosts",
+						TestPropsValues.getCompanyId(),
+						"dynamic.registration.allowed.hosts",
 						new String[] {allowedHost},
 						"dynamic.registration.trust.proxy.headers", true)) {
 
@@ -616,7 +631,8 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			invocationBuilder.header("X-Forwarded-For", requestHost);
 
 			Response response = invocationBuilder.method(
-				"post", Entity.json(_createOpenRegistrationJSONObject().toString()));
+				"post",
+				Entity.json(_createOpenRegistrationJSONObject().toString()));
 
 			Assert.assertEquals(expectedStatus, response.getStatus());
 
