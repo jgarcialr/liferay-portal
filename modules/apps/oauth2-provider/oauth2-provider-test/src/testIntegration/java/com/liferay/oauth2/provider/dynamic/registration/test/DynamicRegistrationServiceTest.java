@@ -626,7 +626,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 
 	private void _testOpenRegistrationIsRejected(
 			int expectedStatus, String expectedError, String body,
-			Object... configOverrides)
+			Object... overrides)
 		throws Exception {
 
 		WebTarget registerWebTarget = getRegisterWebTarget();
@@ -634,7 +634,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 		try (CompanyConfigurationTemporarySwapper
 				companyConfigurationTemporarySwapper =
 					_createCompanyConfigurationTemporarySwapper(
-						TestPropsValues.getCompanyId(), configOverrides)) {
+						TestPropsValues.getCompanyId(), overrides)) {
 
 			Invocation.Builder invocationBuilder = registerWebTarget.request();
 
