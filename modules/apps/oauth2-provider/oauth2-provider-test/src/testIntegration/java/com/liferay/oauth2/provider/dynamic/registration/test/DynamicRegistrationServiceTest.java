@@ -107,7 +107,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 	public void testDelete() throws Exception {
 		OAuth2Application oAuth2Application =
 			_oAuth2ApplicationLocalService.fetchOAuth2Application(
-				TestPropsValues.getCompanyId(), _APPLICATION_NAME_DELETE_ME);
+				TestPropsValues.getCompanyId(), "oauthDeleteMeApplication");
 
 		WebTarget registerWebTarget = getRegisterWebTarget(
 			oAuth2Application.getClientId());
@@ -117,7 +117,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			_getToken(
 				_oAuth2ApplicationLocalService.fetchOAuth2Application(
 					TestPropsValues.getCompanyId(),
-					_APPLICATION_NAME_DYNAMIC_REGISTER_TEST)));
+					"oauthDynamicRegisterTestApplication")));
 
 		Response response = invocationBuilder.delete();
 
@@ -232,25 +232,25 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 					"https://" + RandomTestUtil.randomString() + ".com/callback"
 				}
 			).toString(),
-			_PROPERTY_ALLOWED_GRANT_TYPES,
+			"dynamic.registration.allowed.grant.types",
 			new String[] {OAuthConstants.CLIENT_CREDENTIALS_GRANT});
 		_testOpenRegistrationIsRejected(
-			400, "invalid_client_metadata", _createOpenRegistrationJSONObject().toString(), _PROPERTY_ALLOWED_SCOPES,
+			400, "invalid_client_metadata", _createOpenRegistrationJSONObject().toString(), "dynamic.registration.allowed.scopes",
 			new String[] {"Liferay.Headless.Delivery.everything"});
 
 		_testOpenRegistrationIsRejected(
 			400, "invalid_redirect_uri", _createOpenRegistrationJSONObject("").toString(),
-			_PROPERTY_ALLOWED_REDIRECT_URI_PATTERNS,
+			"dynamic.registration.allowed.redirect.uri.patterns",
 			new String[] {"https://*.example.org/*"});
 		_testOpenRegistrationIsRejected(
 			400, "invalid_redirect_uri",
 			_createOpenRegistrationJSONObject("https://attacker.test/callback").toString(),
-			_PROPERTY_ALLOWED_REDIRECT_URI_PATTERNS,
+			"dynamic.registration.allowed.redirect.uri.patterns",
 			new String[] {"https://*.example.org/*"});
 		_testOpenRegistrationIsRejected(
 			400, "invalid_redirect_uri",
 			_createOpenRegistrationJSONObject("https://attacker.test/foo.example.org/callback").toString(),
-			_PROPERTY_ALLOWED_REDIRECT_URI_PATTERNS,
+			"dynamic.registration.allowed.redirect.uri.patterns",
 			new String[] {"https://*.example.org/*"});
 
 		_testOpenRegistrationIsRejected(
@@ -263,11 +263,11 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			).put(
 				"scope", "Liferay.Headless.Admin.Site.everything"
 			).toString(),
-			_PROPERTY_ALLOWED_SCOPES,
+			"dynamic.registration.allowed.scopes",
 			new String[] {"Liferay.Headless.Delivery.everything"});
 
 		_testOpenRegistrationIsRejected(
-			400, "invalid_client_metadata", _createOpenRegistrationJSONObject().toString(), _PROPERTY_ALLOWED_SCOPES,
+			400, "invalid_client_metadata", _createOpenRegistrationJSONObject().toString(), "dynamic.registration.allowed.scopes",
 			new String[] {StringPool.STAR});
 
 		_testOpenRegistrationIsRejected(
@@ -275,7 +275,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			JSONUtil.put(
 				"client_name", RandomTestUtil.randomString()
 			).toString(),
-			_PROPERTY_REQUIRE_INITIAL_ACCESS_TOKEN, true);
+			"dynamic.registration.require.initial.access.token", true);
 	}
 
 	@Test
@@ -287,7 +287,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			_getToken(
 				_oAuth2ApplicationLocalService.fetchOAuth2Application(
 					TestPropsValues.getCompanyId(),
-					_APPLICATION_NAME_DYNAMIC_REGISTER_TEST)));
+					"oauthDynamicRegisterTestApplication")));
 
 		Response response = invocationBuilder.method(
 			"post",
@@ -434,7 +434,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 	public void testPut() throws Exception {
 		OAuth2Application oAuth2Application =
 			_oAuth2ApplicationLocalService.fetchOAuth2Application(
-				TestPropsValues.getCompanyId(), _APPLICATION_NAME_DELETE_ME);
+				TestPropsValues.getCompanyId(), "oauthDeleteMeApplication");
 
 		WebTarget registerWebTarget = getRegisterWebTarget(
 			oAuth2Application.getClientId());
@@ -501,16 +501,16 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 
 		Dictionary<String, Object> properties =
 			HashMapDictionaryBuilder.<String, Object>put(
-				_PROPERTY_ALLOWED_GRANT_TYPES, new String[] {StringPool.STAR}
+				"dynamic.registration.allowed.grant.types", new String[] {StringPool.STAR}
 			).put(
-				_PROPERTY_ALLOWED_HOSTS, new String[] {StringPool.STAR}
+				"dynamic.registration.allowed.hosts", new String[] {StringPool.STAR}
 			).put(
-				_PROPERTY_ALLOWED_REDIRECT_URI_PATTERNS,
+				"dynamic.registration.allowed.redirect.uri.patterns",
 				new String[] {StringPool.STAR}
 			).put(
-				_PROPERTY_ALLOWED_SCOPES, new String[] {StringPool.STAR}
+				"dynamic.registration.allowed.scopes", new String[] {StringPool.STAR}
 			).put(
-				_PROPERTY_REQUIRE_INITIAL_ACCESS_TOKEN, false
+				"dynamic.registration.require.initial.access.token", false
 			).build();
 
 		for (int i = 0; i < overrides.length; i += 2) {
@@ -518,7 +518,10 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 		}
 
 		return new CompanyConfigurationTemporarySwapper(
-			companyId, _CONFIGURATION_PID, properties);
+			companyId,
+			"com.liferay.oauth2.provider.rest.internal.configuration." +
+				"OAuth2DynamicRegistrationConfiguration",
+			properties);
 	}
 
 	private JSONObject _createRegistrationJSONObject(
@@ -604,9 +607,9 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 		try (CompanyConfigurationTemporarySwapper
 				companyConfigurationTemporarySwapper =
 					_createCompanyConfigurationTemporarySwapper(
-						TestPropsValues.getCompanyId(), _PROPERTY_ALLOWED_HOSTS,
+						TestPropsValues.getCompanyId(), "dynamic.registration.allowed.hosts",
 						new String[] {allowedHost},
-						_PROPERTY_TRUST_PROXY_HEADERS, true)) {
+						"dynamic.registration.trust.proxy.headers", true)) {
 
 			Invocation.Builder invocationBuilder = registerWebTarget.request();
 
@@ -649,34 +652,6 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 		}
 	}
 
-	private static final String _APPLICATION_NAME_DELETE_ME =
-		"oauthDeleteMeApplication";
-
-	private static final String _APPLICATION_NAME_DYNAMIC_REGISTER_TEST =
-		"oauthDynamicRegisterTestApplication";
-
-	private static final String _CONFIGURATION_PID =
-		"com.liferay.oauth2.provider.rest.internal.configuration." +
-			"OAuth2DynamicRegistrationConfiguration";
-
-	private static final String _PROPERTY_ALLOWED_GRANT_TYPES =
-		"dynamic.registration.allowed.grant.types";
-
-	private static final String _PROPERTY_ALLOWED_HOSTS =
-		"dynamic.registration.allowed.hosts";
-
-	private static final String _PROPERTY_ALLOWED_REDIRECT_URI_PATTERNS =
-		"dynamic.registration.allowed.redirect.uri.patterns";
-
-	private static final String _PROPERTY_ALLOWED_SCOPES =
-		"dynamic.registration.allowed.scopes";
-
-	private static final String _PROPERTY_REQUIRE_INITIAL_ACCESS_TOKEN =
-		"dynamic.registration.require.initial.access.token";
-
-	private static final String _PROPERTY_TRUST_PROXY_HEADERS =
-		"dynamic.registration.trust.proxy.headers";
-
 	@Inject
 	private OAuth2ApplicationLocalService _oAuth2ApplicationLocalService;
 
@@ -693,9 +668,9 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			User user = UserTestUtil.getAdminUser(companyId);
 
 			createOAuth2Application(
-				companyId, user, _APPLICATION_NAME_DYNAMIC_REGISTER_TEST);
+				companyId, user, "oauthDynamicRegisterTestApplication");
 			createOAuth2Application(
-				companyId, user, _APPLICATION_NAME_DELETE_ME);
+				companyId, user, "oauthDeleteMeApplication");
 		}
 
 	}
