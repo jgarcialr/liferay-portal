@@ -515,7 +515,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 
 	private CompanyConfigurationTemporarySwapper
 			_createCompanyConfigurationTemporarySwapper(
-				long companyId, Object... overrides)
+				long companyId, Object... keysAndValues)
 		throws Exception {
 
 		Dictionary<String, Object> properties =
@@ -532,8 +532,8 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 				_PROPERTY_REQUIRE_INITIAL_ACCESS_TOKEN, false
 			).build();
 
-		for (int i = 0; i < overrides.length; i += 2) {
-			properties.put((String)overrides[i], overrides[i + 1]);
+		for (int i = 0; i < keysAndValues.length; i += 2) {
+			properties.put((String)keysAndValues[i], keysAndValues[i + 1]);
 		}
 
 		return new CompanyConfigurationTemporarySwapper(
@@ -638,7 +638,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 
 	private void _testOpenRegistrationIsRejected(
 			int expectedStatus, String expectedError, String body,
-			Object... configOverrides)
+			Object... keysAndValues)
 		throws Exception {
 
 		WebTarget registerWebTarget = getRegisterWebTarget();
@@ -646,7 +646,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 		try (CompanyConfigurationTemporarySwapper
 				companyConfigurationTemporarySwapper =
 					_createCompanyConfigurationTemporarySwapper(
-						TestPropsValues.getCompanyId(), configOverrides)) {
+						TestPropsValues.getCompanyId(), keysAndValues)) {
 
 			Invocation.Builder invocationBuilder = registerWebTarget.request();
 
