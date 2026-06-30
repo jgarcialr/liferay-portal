@@ -235,21 +235,21 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			_PROPERTY_ALLOWED_GRANT_TYPES,
 			new String[] {OAuthConstants.CLIENT_CREDENTIALS_GRANT});
 		_testOpenRegistrationIsRejected(
-			400, "invalid_client_metadata", _body(), _PROPERTY_ALLOWED_SCOPES,
+			400, "invalid_client_metadata", _createOpenRegistrationJSONObject().toString(), _PROPERTY_ALLOWED_SCOPES,
 			new String[] {"Liferay.Headless.Delivery.everything"});
 
 		_testOpenRegistrationIsRejected(
-			400, "invalid_redirect_uri", _body(""),
+			400, "invalid_redirect_uri", _createOpenRegistrationJSONObject("").toString(),
 			_PROPERTY_ALLOWED_REDIRECT_URI_PATTERNS,
 			new String[] {"https://*.example.org/*"});
 		_testOpenRegistrationIsRejected(
 			400, "invalid_redirect_uri",
-			_body("https://attacker.test/callback"),
+			_createOpenRegistrationJSONObject("https://attacker.test/callback").toString(),
 			_PROPERTY_ALLOWED_REDIRECT_URI_PATTERNS,
 			new String[] {"https://*.example.org/*"});
 		_testOpenRegistrationIsRejected(
 			400, "invalid_redirect_uri",
-			_body("https://attacker.test/foo.example.org/callback"),
+			_createOpenRegistrationJSONObject("https://attacker.test/foo.example.org/callback").toString(),
 			_PROPERTY_ALLOWED_REDIRECT_URI_PATTERNS,
 			new String[] {"https://*.example.org/*"});
 
@@ -267,7 +267,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			new String[] {"Liferay.Headless.Delivery.everything"});
 
 		_testOpenRegistrationIsRejected(
-			400, "invalid_client_metadata", _body(), _PROPERTY_ALLOWED_SCOPES,
+			400, "invalid_client_metadata", _createOpenRegistrationJSONObject().toString(), _PROPERTY_ALLOWED_SCOPES,
 			new String[] {StringPool.STAR});
 
 		_testOpenRegistrationIsRejected(
@@ -476,12 +476,12 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 		return new DynamicRegistrationServiceTestPreparatorBundleActivator();
 	}
 
-	private String _body() {
-		return _body(
+	private JSONObject _createOpenRegistrationJSONObject() {
+		return _createOpenRegistrationJSONObject(
 			"https://" + RandomTestUtil.randomString() + ".com/callback");
 	}
 
-	private String _body(String redirectUri) {
+	private JSONObject _createOpenRegistrationJSONObject(String redirectUri) {
 		return JSONUtil.put(
 			"client_name", RandomTestUtil.randomString()
 		).put(
@@ -491,7 +491,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			"redirect_uris", new String[] {redirectUri}
 		).put(
 			"response_types", new String[] {OAuthConstants.CODE_RESPONSE_TYPE}
-		).toString();
+		);
 	}
 
 	private CompanyConfigurationTemporarySwapper
@@ -613,7 +613,7 @@ public class DynamicRegistrationServiceTest extends BaseClientTestCase {
 			invocationBuilder.header("X-Forwarded-For", requestHost);
 
 			Response response = invocationBuilder.method(
-				"post", Entity.json(_body()));
+				"post", Entity.json(_createOpenRegistrationJSONObject().toString()));
 
 			Assert.assertEquals(expectedStatus, response.getStatus());
 
