@@ -1,0 +1,99 @@
+components:
+    schemas:
+        AlgorithmFamily:
+            description:
+                Resolver check for one algorithm family.
+            properties:
+                declaredProvider:
+                    description:
+                        The declared FIPS provider.
+                    type: string
+                family:
+                    description:
+                        The algorithm family, for example "SIGNATURE" or "CIPHER".
+                    type: string
+                matches:
+                    description:
+                        Whether the resolved provider matches the declared provider.
+                    type: boolean
+                resolvedProvider:
+                    description:
+                        The provider that actually resolves a representative algorithm.
+                    type: string
+            type: object
+        FIPSMode:
+            description:
+                The FIPS operating state.
+            properties:
+                approvedMode:
+                    description:
+                        Whether the validated provider is in approved-only mode and passed its integrity self-test.
+                    type: boolean
+                enabled:
+                    description:
+                        Whether FIPS mode is enabled through configuration.
+                    type: boolean
+            type: object
+        SecurityInfo:
+            description:
+                A snapshot of the active FIPS cryptographic configuration.
+            properties:
+                algorithmFamilies:
+                    description:
+                        The per-algorithm-family resolver check against the declared provider.
+                    items:
+                        $ref: "#/components/schemas/AlgorithmFamily"
+                    type: array
+                fipsMode:
+                    $ref: "#/components/schemas/FIPSMode"
+                jsseProvider:
+                    $ref: "#/components/schemas/SecurityProvider"
+                provider:
+                    $ref: "#/components/schemas/SecurityProvider"
+                providerOrder:
+                    description:
+                        The full security provider order, by name.
+                    items:
+                        type: string
+                    type: array
+            type: object
+        SecurityProvider:
+            description:
+                A JCA security provider.
+            properties:
+                name:
+                    description:
+                        The provider name.
+                    type: string
+                version:
+                    description:
+                        The provider version.
+                    type: string
+            type: object
+info:
+    description:
+        "Read-only view of the active FIPS 140-3 cryptographic configuration.. A Java client JAR is available for use with the group ID 'com.liferay', artifact ID 'com.liferay.portal.security.fips.rest.client', and version '1.0.0'."
+    license:
+        name: Apache 2.0
+        url: http://www.apache.org/licenses/LICENSE-2.0.html
+    title: Security FIPS
+    version: v1.0
+openapi: 3.0.1
+paths:
+    "/security-info":
+        get:
+            description:
+                Returns the live security-provider and FIPS configuration for the current server.
+            operationId: getSecurityInfo
+            responses:
+                200:
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/SecurityInfo"
+                        application/xml:
+                            schema:
+                                $ref: "#/components/schemas/SecurityInfo"
+                    description:
+                        The security configuration snapshot.
+            tags: ["SecurityInfo"]
