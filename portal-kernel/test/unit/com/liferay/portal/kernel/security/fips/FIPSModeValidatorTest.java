@@ -19,33 +19,35 @@ import org.junit.function.ThrowingRunnable;
 
 /**
  * @author Caio Farias
+ * @author Jorge García Jiménez
  */
 public class FIPSModeValidatorTest {
 
 	@Test
+	public void testGetStatus() {
+		FIPSProviderStatus fipsProviderStatus = FIPSModeValidator.getStatus();
+
+		Assert.assertNotNull(fipsProviderStatus.getProviderName());
+		Assert.assertFalse(
+			fipsProviderStatus.getProviderOrder(
+			).isEmpty());
+	}
+
+	@Test
 	public void testValidateFIPSProvider() {
 		for (String name : List.of("AmazonCorrettoCryptoProvider", "BCFIPS")) {
-			_assertSecurityException(
-				"FIPS provider integrity failed:",
-				() -> ReflectionTestUtil.invoke(
-					FIPSModeValidator.class, "_validateFIPSProvider",
-					new Class<?>[] {Provider[].class},
-					(Object)new Provider[] {_createProvider(name)}));
+			_assertFailedCheck(
+				"FIPS provider integrity failed:", "_validateFIPSProvider",
+				new Provider[] {_createProvider(name)});
 		}
 
-		_assertSecurityException(
+		_assertFailedCheck(
 			"The first security provider must be an allowed FIPS provider",
-			() -> ReflectionTestUtil.invoke(
-				FIPSModeValidator.class, "_validateFIPSProvider",
-				new Class<?>[] {Provider[].class},
-				(Object)new Provider[] {
-					_createProvider(RandomTestUtil.randomString())
-				}));
-		_assertSecurityException(
-			"There are no security providers",
-			() -> ReflectionTestUtil.invoke(
-				FIPSModeValidator.class, "_validateFIPSProvider",
-				new Class<?>[] {Provider[].class}, (Object)new Provider[0]));
+			"_validateFIPSProvider",
+			new Provider[] {_createProvider(RandomTestUtil.randomString())});
+		_assertFailedCheck(
+			"There are no security providers", "_validateFIPSProvider",
+			new Provider[0]);
 	}
 
 	@Test
@@ -90,16 +92,23 @@ public class FIPSModeValidatorTest {
 				FIPSModeValidator.class, "_allowedProviderNames");
 
 		for (String allowedProviderName : allowedProviderNames.keySet()) {
-			_assertSecurityException(
-				"are not allowed in FIPS mode for",
-				() -> ReflectionTestUtil.invoke(
-					FIPSModeValidator.class, "_validateProviders",
-					new Class<?>[] {Provider[].class},
-					(Object)new Provider[] {
-						_createProvider(allowedProviderName),
-						_createProvider(RandomTestUtil.randomString())
-					}));
+			_assertFailedCheck(
+				"are not allowed in FIPS mode for", "_validateProviders",
+				new Provider[] {
+					_createProvider(allowedProviderName),
+					_createProvider(RandomTestUtil.randomString())
+				});
 		}
+	}
+
+	private void _assertFailedCheck(
+		String expectedMessage, String methodName, Provider[] providers) {
+
+		String failedCheck = ReflectionTestUtil.invoke(
+			FIPSModeValidator.class, methodName,
+			new Class<?>[] {Provider[].class}, (Object)providers);
+
+		Assert.assertTrue(failedCheck, failedCheck.contains(expectedMessage));
 	}
 
 	private void _assertSecurityException(

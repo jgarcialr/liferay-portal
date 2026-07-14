@@ -5,6 +5,7 @@
 
 package com.liferay.portal.kernel.security.fips;
 
+import com.liferay.petra.function.transform.TransformUtil;
 import com.liferay.petra.reflect.ReflectionUtil;
 import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.security.pwd.PasswordEncryptor;
@@ -26,24 +27,74 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.net.ssl.SSLContext;
+
 /**
  * @author Caio Farias
+ * @author Jorge García Jiménez
  */
 public class FIPSModeValidator {
 
-	public static void validate() {
+	public static FIPSProviderStatus getStatus() {
 		Provider[] providers = Security.getProviders();
 
-		_validateFIPSProvider(providers);
-		_validateProviders(providers);
+		List<String> providerOrder = TransformUtil.transformToList(
+			providers, Provider::getName);
+
+		String providerName = null;
+		String providerVersion = null;
+
+		if (ArrayUtil.isNotEmpty(providers)) {
+			Provider provider = providers[0];
+
+			providerName = provider.getName();
+			providerVersion = provider.getVersionStr();
+		}
+
+		String failedCheck = _validateFIPSProvider(providers);
+
+		boolean approvedMode = false;
+
+		if (failedCheck == null) {
+			approvedMode = true;
+		}
+
+		if (approvedMode) {
+			failedCheck = _validateProviders(providers);
+		}
+
+		return new FIPSProviderStatus(
+			approvedMode, failedCheck, _getJSSEProviderName(), providerName,
+			providerOrder, providerVersion);
+	}
+
+	public static void validate() {
+		FIPSProviderStatus fipsProviderStatus = getStatus();
+
+		if (!fipsProviderStatus.isValid()) {
+			throw new SecurityException(fipsProviderStatus.getFailedCheck());
+		}
 
 		_validatePasswordsEncryptionAlgorithm(
 			PropsUtil.get(PropsKeys.PASSWORDS_ENCRYPTION_ALGORITHM));
 	}
 
-	private static void _validateFIPSProvider(Provider[] providers) {
+	private static String _getJSSEProviderName() {
+		try {
+			SSLContext sslContext = SSLContext.getInstance("TLS");
+
+			Provider provider = sslContext.getProvider();
+
+			return provider.getName();
+		}
+		catch (Exception exception) {
+			return null;
+		}
+	}
+
+	private static String _validateFIPSProvider(Provider[] providers) {
 		if (ArrayUtil.isEmpty(providers)) {
-			throw new SecurityException("There are no security providers");
+			return "There are no security providers";
 		}
 
 		Provider provider = providers[0];
@@ -51,8 +102,8 @@ public class FIPSModeValidator {
 		String name = provider.getName();
 
 		if (!_allowedProviderNames.containsKey(name)) {
-			throw new SecurityException(
-				"The first security provider must be an allowed FIPS provider");
+			return "The first security provider must be an allowed FIPS " +
+				"provider";
 		}
 
 		try {
@@ -70,16 +121,13 @@ public class FIPSModeValidator {
 				Method isFIPSMethod = ReflectionUtil.getDeclaredMethod(
 					providerClass, "isFips");
 
-				if (!GetterUtil.getBoolean(
-						isExperimentalFIPSMethod.invoke(provider)) &&
-					GetterUtil.getBoolean(isFIPSMethod.invoke(provider))) {
+				if (GetterUtil.getBoolean(
+						isExperimentalFIPSMethod.invoke(provider)) ||
+					!GetterUtil.getBoolean(isFIPSMethod.invoke(provider))) {
 
-					return;
+					return "AmazonCorrettoCryptoProvider must be a " +
+						"nonexperimental FIPS build";
 				}
-
-				throw new SecurityException(
-					"AmazonCorrettoCryptoProvider must be a nonexperimental " +
-						"FIPS build");
 			}
 			else if (Objects.equals(name, "BCFIPS")) {
 				Class<?> providerClass = provider.getClass();
@@ -96,8 +144,7 @@ public class FIPSModeValidator {
 				if (!GetterUtil.getBoolean(
 						isInApprovedOnlyModeMethod.invoke(null))) {
 
-					throw new SecurityException(
-						"BCFIPS is not in approved only mode");
+					return "BCFIPS is not in approved only mode";
 				}
 
 				Class<?> fipsStatusClass = Class.forName(
@@ -112,14 +159,10 @@ public class FIPSModeValidator {
 						ReflectionUtil.getDeclaredMethod(
 							fipsStatusClass, "getStatusMessage");
 
-					throw new SecurityException(
-						"BCFIPS integrity self test failed: " +
-							getStatusMessageMethod.invoke(null));
+					return "BCFIPS integrity self test failed: " +
+						getStatusMessageMethod.invoke(null);
 				}
 			}
-		}
-		catch (SecurityException securityException) {
-			throw securityException;
 		}
 		catch (Throwable throwable) {
 			Throwable causeThrowable = throwable.getCause();
@@ -134,9 +177,10 @@ public class FIPSModeValidator {
 				message = causeThrowable.toString();
 			}
 
-			throw new SecurityException(
-				"FIPS provider integrity failed: " + message, causeThrowable);
+			return "FIPS provider integrity failed: " + message;
 		}
+
+		return null;
 	}
 
 	private static void _validatePasswordsEncryptionAlgorithm(
@@ -183,7 +227,7 @@ public class FIPSModeValidator {
 		}
 	}
 
-	private static void _validateProviders(Provider[] providers) {
+	private static String _validateProviders(Provider[] providers) {
 		Provider provider = providers[0];
 
 		List<String> allowedProviderNames = _allowedProviderNames.get(
@@ -196,13 +240,12 @@ public class FIPSModeValidator {
 				!allowedProviderNames.contains(curProvider.getName()));
 
 		if (ArrayUtil.isEmpty(notAllowedProviders)) {
-			return;
+			return null;
 		}
 
-		throw new SecurityException(
-			StringBundler.concat(
-				"The security providers ", Arrays.toString(notAllowedProviders),
-				" are not allowed in FIPS mode for ", provider.getName()));
+		return StringBundler.concat(
+			"The security providers ", Arrays.toString(notAllowedProviders),
+			" are not allowed in FIPS mode for ", provider.getName());
 	}
 
 	private static final int _PASSWORDS_ENCRYPTION_ALGORITHM_KEY_SIZE_MIN = 112;
