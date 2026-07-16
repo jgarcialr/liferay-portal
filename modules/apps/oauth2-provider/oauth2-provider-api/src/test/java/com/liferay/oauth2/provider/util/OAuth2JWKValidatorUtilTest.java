@@ -104,8 +104,19 @@ public class OAuth2JWKValidatorUtilTest {
 	}
 
 	@Test
+	public void testValidateJWKWithOKPKey() {
+		OAuth2JWKValidatorUtil.validateJWK(_generateOKPJWK("EdDSA", "Ed25519"));
+		OAuth2JWKValidatorUtil.validateJWK(_generateOKPJWK("EdDSA", "Ed448"));
+
+		Assert.assertThrows(
+			SecurityException.class,
+			() -> OAuth2JWKValidatorUtil.validateJWK(
+				_generateOKPJWK("EdDSA", "X25519")));
+	}
+
+	@Test
 	public void testValidateJWKWithUnsupportedKeyType() {
-		for (String keyType : new String[] {"OKP", "oct"}) {
+		for (String keyType : new String[] {"garbage", "oct"}) {
 			Assert.assertThrows(
 				SecurityException.class,
 				() -> OAuth2JWKValidatorUtil.validateJWK(
@@ -120,11 +131,11 @@ public class OAuth2JWKValidatorUtilTest {
 	@Test
 	public void testValidateJWSAlgorithm() {
 		_testValidateJWSAlgorithm(
-			false, null, StringPool.BLANK, "ES256K", "EdDSA", "HS1", "HS256",
-			"HS384", "HS512", "RS1", "RSA1_5", "garbage", "none", "rs256");
+			false, null, StringPool.BLANK, "ES256K", "HS1", "HS256", "HS384",
+			"HS512", "RS1", "RSA1_5", "garbage", "none", "rs256");
 		_testValidateJWSAlgorithm(
-			true, "ES256", "ES384", "ES512", "PS256", "PS384", "PS512", "RS256",
-			"RS384", "RS512");
+			true, "ES256", "ES384", "ES512", "EdDSA", "PS256", "PS384", "PS512",
+			"RS256", "RS384", "RS512");
 	}
 
 	private String _generateECJWK(String algorithm, String curve) {
@@ -136,6 +147,18 @@ public class OAuth2JWKValidatorUtilTest {
 			"kid", RandomTestUtil.randomString()
 		).put(
 			"kty", "EC"
+		).toString();
+	}
+
+	private String _generateOKPJWK(String algorithm, String curve) {
+		return JSONUtil.put(
+			"alg", algorithm
+		).put(
+			"crv", curve
+		).put(
+			"kid", RandomTestUtil.randomString()
+		).put(
+			"kty", "OKP"
 		).toString();
 	}
 
