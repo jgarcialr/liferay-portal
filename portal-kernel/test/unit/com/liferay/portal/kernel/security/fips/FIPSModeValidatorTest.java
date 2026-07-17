@@ -6,6 +6,7 @@
 package com.liferay.portal.kernel.security.fips;
 
 import com.liferay.petra.lang.SafeCloseable;
+import com.liferay.petra.string.StringPool;
 import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.PropsValuesTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
@@ -14,6 +15,7 @@ import java.security.Provider;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -23,6 +25,76 @@ import org.junit.function.ThrowingRunnable;
  * @author Caio Farias
  */
 public class FIPSModeValidatorTest {
+
+	@Test
+	public void testFindPlaintextCSPKeys() {
+		String obfuscatedKey1 = RandomTestUtil.randomString();
+		String obfuscatedKey2 = RandomTestUtil.randomString();
+
+		try (SafeCloseable safeCloseable =
+				PropsValuesTestUtil.swapWithSafeCloseable(
+					"ADMIN_OBFUSCATED_PROPERTIES",
+					new String[] {obfuscatedKey1, obfuscatedKey2})) {
+
+			String jdbcPasswordKey =
+				"jdbc." + RandomTestUtil.randomString() + ".password";
+
+			Properties properties = new Properties();
+
+			properties.setProperty(
+				obfuscatedKey1, RandomTestUtil.randomString());
+			properties.setProperty(
+				obfuscatedKey2, "${" + RandomTestUtil.randomString() + "}");
+			properties.setProperty(
+				jdbcPasswordKey, RandomTestUtil.randomString());
+			properties.setProperty(
+				"jdbc." + RandomTestUtil.randomString() + ".password",
+				StringPool.BLANK);
+			properties.setProperty(
+				RandomTestUtil.randomString(), RandomTestUtil.randomString());
+
+			List<String> plaintextCSPKeys = ReflectionTestUtil.invoke(
+				FIPSModeValidator.class, "_findPlaintextCSPKeys",
+				new Class<?>[] {Properties.class}, properties);
+
+			Assert.assertEquals(
+				plaintextCSPKeys.toString(), 2, plaintextCSPKeys.size());
+			Assert.assertTrue(plaintextCSPKeys.contains(jdbcPasswordKey));
+			Assert.assertTrue(plaintextCSPKeys.contains(obfuscatedKey1));
+		}
+	}
+
+	@Test
+	public void testIsCSPKey() {
+		String obfuscatedKey = RandomTestUtil.randomString();
+
+		try (SafeCloseable safeCloseable =
+				PropsValuesTestUtil.swapWithSafeCloseable(
+					"ADMIN_OBFUSCATED_PROPERTIES",
+					new String[] {obfuscatedKey})) {
+
+			Assert.assertTrue(
+				(boolean)ReflectionTestUtil.invoke(
+					FIPSModeValidator.class, "_isCSPKey",
+					new Class<?>[] {String.class}, obfuscatedKey));
+			Assert.assertTrue(
+				(boolean)ReflectionTestUtil.invoke(
+					FIPSModeValidator.class, "_isCSPKey",
+					new Class<?>[] {String.class},
+					"jdbc." + RandomTestUtil.randomString() + ".password"));
+
+			Assert.assertFalse(
+				(boolean)ReflectionTestUtil.invoke(
+					FIPSModeValidator.class, "_isCSPKey",
+					new Class<?>[] {String.class},
+					"jdbc." + RandomTestUtil.randomString() + ".username"));
+			Assert.assertFalse(
+				(boolean)ReflectionTestUtil.invoke(
+					FIPSModeValidator.class, "_isCSPKey",
+					new Class<?>[] {String.class},
+					RandomTestUtil.randomString()));
+		}
+	}
 
 	@Test
 	public void testValidateAlgorithm() {
