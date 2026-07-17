@@ -10,21 +10,28 @@ import com.liferay.petra.string.StringBundler;
 import com.liferay.portal.kernel.security.pwd.PasswordEncryptor;
 import com.liferay.portal.kernel.util.ArrayUtil;
 import com.liferay.portal.kernel.util.GetterUtil;
+import com.liferay.portal.kernel.util.PropertiesUtil;
 import com.liferay.portal.kernel.util.PropsKeys;
 import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.StringUtil;
 import com.liferay.portal.kernel.util.Validator;
 
+import java.io.IOException;
+
 import java.lang.reflect.Method;
+
+import java.net.URL;
 
 import java.security.Provider;
 import java.security.Security;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +48,7 @@ public class FIPSModeValidator {
 		_validateProviders(providers);
 
 		_validateProperties();
+		_validatePlaintextCSPs();
 	}
 
 	public static void validateAlgorithm(String algorithm) {
@@ -71,6 +79,42 @@ public class FIPSModeValidator {
 			throw new SecurityException(
 				"AES key must be 128, 192, or 256 bits");
 		}
+	}
+
+	private static List<String> _findPlaintextCSPKeys(Properties properties) {
+		List<String> plaintextCSPKeys = new ArrayList<>();
+
+		for (String key : properties.stringPropertyNames()) {
+			if (!_isCSPKey(key)) {
+				continue;
+			}
+
+			String value = properties.getProperty(key);
+
+			if (Validator.isNull(value)) {
+				continue;
+			}
+
+			String trimmedValue = value.trim();
+
+			if (trimmedValue.startsWith("${") && trimmedValue.endsWith("}")) {
+				continue;
+			}
+
+			plaintextCSPKeys.add(key);
+		}
+
+		return plaintextCSPKeys;
+	}
+
+	private static boolean _isCSPKey(String key) {
+		if (ArrayUtil.contains(PropsValues.ADMIN_OBFUSCATED_PROPERTIES, key) ||
+			(key.startsWith("jdbc.") && key.endsWith(".password"))) {
+
+			return true;
+		}
+
+		return false;
 	}
 
 	private static void _validateFIPSProvider(Provider[] providers) {
@@ -212,6 +256,42 @@ public class FIPSModeValidator {
 					"PBKDF2 iteration count ", rounds,
 					" is below the minimum allowed value of ",
 					_PASSWORDS_ENCRYPTION_ALGORITHM_ROUNDS_MIN));
+		}
+	}
+
+	private static void _validatePlaintextCSPs() {
+		List<String> messages = new ArrayList<>();
+
+		for (String source : PropsUtil.getLoadedSources()) {
+			String fileName = source.substring(source.lastIndexOf('/') + 1);
+
+			if (fileName.equals("portal.properties")) {
+				continue;
+			}
+
+			Properties properties = null;
+
+			try {
+				properties = PropertiesUtil.load(new URL(source));
+			}
+			catch (IOException ioException) {
+				continue;
+			}
+
+			for (String key : _findPlaintextCSPKeys(properties)) {
+				messages.add(
+					StringBundler.concat(
+						"property \"", key, "\" in \"", fileName, "\""));
+			}
+		}
+
+		if (!messages.isEmpty()) {
+			throw new SecurityException(
+				StringBundler.concat(
+					"FIPS mode does not allow a plaintext value for ",
+					StringUtil.merge(messages, ", "),
+					". Inject the value through an environment variable or ",
+					"move it to an OSGi configuration secret reference."));
 		}
 	}
 
