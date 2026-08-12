@@ -47,9 +47,9 @@ public class FIPSAuditNDJSONLayoutTest {
 	@Test
 	public void testEncode() {
 		Map<String, Object> record = LinkedHashMapBuilder.<String, Object>put(
-			"severity", "critical"
-		).put(
 			"event-type", "fips-state-transition"
+		).put(
+			"severity", "critical"
 		).build();
 
 		FIPSAuditNDJSONLayout fipsAuditNDJSONLayout =
