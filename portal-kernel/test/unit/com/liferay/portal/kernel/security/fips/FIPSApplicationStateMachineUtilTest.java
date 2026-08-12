@@ -105,14 +105,13 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Map<String, Object> record = _getRecord();
 
-		_assertEnvelope(record, "event-type", "fips-state-transition");
-		_assertEnvelope(record, "severity", "critical");
-
-		_assertField(record, "failed-step", failedStep);
-		_assertField(record, "from-state", "Operational");
+		_assertEnvelope("event-type", record, "fips-state-transition");
+		_assertEnvelope("severity", record, "critical");
+		_assertField("failed-step", record, failedStep);
+		_assertField("from-state", record, "Operational");
 		_assertField(
-			record, "provider-error-message", "The provider is unhappy");
-		_assertField(record, "to-state", "Error");
+			"provider-error-message", record, "The provider is unhappy");
+		_assertField("to-state", record, "Error");
 	}
 
 	@Test
@@ -133,18 +132,16 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Assert.assertEquals(_records.toString(), 2, _records.size());
 
-		_assertEnvelope(_records.get(0), "severity", "info");
-
+		_assertEnvelope("severity", _records.get(0), "info");
 		_assertField(
-			_records.get(0), "crypto-officer-user-id", cryptoOfficerUserId);
-		_assertField(_records.get(0), "operation-type", operationType);
-		_assertField(_records.get(0), "to-state", "Key/CSP Entry");
-
-		_assertField(_records.get(1), "from-state", "Key/CSP Entry");
+			"crypto-officer-user-id", _records.get(0), cryptoOfficerUserId);
+		_assertField("operation-type", _records.get(0), operationType);
+		_assertField("to-state", _records.get(0), "Key/CSP Entry");
+		_assertField("from-state", _records.get(1), "Key/CSP Entry");
 		_assertField(
-			_records.get(1), "message",
+			"message", _records.get(1),
 			"The operation was completed successfully");
-		_assertField(_records.get(1), "to-state", "Operational");
+		_assertField("to-state", _records.get(1), "Operational");
 	}
 
 	@Test
@@ -165,12 +162,11 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Assert.assertEquals(_records.toString(), 2, _records.size());
 
-		_assertEnvelope(_records.get(1), "severity", "critical");
-
-		_assertField(_records.get(1), "failed-step", "Key or CSP entry");
+		_assertEnvelope("severity", _records.get(1), "critical");
+		_assertField("failed-step", _records.get(1), "Key or CSP entry");
 		_assertField(
-			_records.get(1), "provider-error-message", "The key is unusable");
-		_assertField(_records.get(1), "to-state", "Error");
+			"provider-error-message", _records.get(1), "The key is unusable");
+		_assertField("to-state", _records.get(1), "Error");
 	}
 
 	@Test
@@ -189,12 +185,11 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Map<String, Object> record = _getRecord();
 
-		_assertEnvelope(record, "severity", "info");
-
-		_assertField(record, "crypto-officer-user-id", cryptoOfficerUserId);
-		_assertField(record, "from-state", "Quiescent");
-		_assertField(record, "reason", reason);
-		_assertField(record, "to-state", "Operational");
+		_assertEnvelope("severity", record, "info");
+		_assertField("crypto-officer-user-id", record, cryptoOfficerUserId);
+		_assertField("from-state", record, "Quiescent");
+		_assertField("reason", record, reason);
+		_assertField("to-state", record, "Operational");
 	}
 
 	@Test
@@ -211,11 +206,10 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Map<String, Object> record = _getRecord();
 
-		_assertEnvelope(record, "severity", "info");
-
-		_assertField(record, "from-state", "Operational");
-		_assertField(record, "initiating-actor", initiatingActor);
-		_assertField(record, "to-state", "Power-off");
+		_assertEnvelope("severity", record, "info");
+		_assertField("from-state", record, "Operational");
+		_assertField("initiating-actor", record, initiatingActor);
+		_assertField("to-state", record, "Power-off");
 	}
 
 	@Test
@@ -233,12 +227,11 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Map<String, Object> record = _getRecord();
 
-		_assertEnvelope(record, "severity", "info");
-
-		_assertField(record, "crypto-officer-user-id", cryptoOfficerUserId);
-		_assertField(record, "from-state", "Operational");
-		_assertField(record, "reason", reason);
-		_assertField(record, "to-state", "Quiescent");
+		_assertEnvelope("severity", record, "info");
+		_assertField("crypto-officer-user-id", record, cryptoOfficerUserId);
+		_assertField("from-state", record, "Operational");
+		_assertField("reason", record, reason);
+		_assertField("to-state", record, "Quiescent");
 	}
 
 	@Test
@@ -255,11 +248,10 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Map<String, Object> record = _getRecord();
 
-		_assertEnvelope(record, "severity", "info");
-
-		_assertField(record, "from-state", "Operational");
-		_assertField(record, "initiating-actor", "OS signal");
-		_assertField(record, "to-state", "Power-off");
+		_assertEnvelope("severity", record, "info");
+		_assertField("from-state", record, "Operational");
+		_assertField("initiating-actor", record, "OS signal");
+		_assertField("to-state", record, "Power-off");
 	}
 
 	@Test
@@ -289,15 +281,14 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Assert.assertEquals(_records.toString(), 2, _records.size());
 
-		_assertField(_records.get(0), "from-state", "Initializing");
+		_assertField("from-state", _records.get(0), "Initializing");
 		_assertField(
-			_records.get(0), "message", "The integrity checks were started");
-		_assertField(_records.get(0), "to-state", "Self-Test");
-
+			"message", _records.get(0), "The integrity checks were started");
+		_assertField("to-state", _records.get(0), "Self-Test");
 		_assertField(
-			_records.get(1), "message",
+			"message", _records.get(1),
 			"All checks and the validated provider self tests passed");
-		_assertField(_records.get(1), "to-state", "Operational");
+		_assertField("to-state", _records.get(1), "Operational");
 
 		_testSelfTest(new RuntimeException());
 		_testSelfTest(new SecurityException());
@@ -322,12 +313,11 @@ public class FIPSApplicationStateMachineUtilTest {
 		Assert.assertEquals(_records.toString(), 2, _records.size());
 
 		_assertField(
-			_records.get(0), "crypto-officer-user-id", cryptoOfficerUserId);
-		_assertField(_records.get(0), "from-state", "Error");
-		_assertField(_records.get(0), "recovery-action", recoveryAction);
-		_assertField(_records.get(0), "to-state", "Self-Test");
-
-		_assertField(_records.get(1), "to-state", "Operational");
+			"crypto-officer-user-id", _records.get(0), cryptoOfficerUserId);
+		_assertField("from-state", _records.get(0), "Error");
+		_assertField("recovery-action", _records.get(0), recoveryAction);
+		_assertField("to-state", _records.get(0), "Self-Test");
+		_assertField("to-state", _records.get(1), "Operational");
 	}
 
 	@Test
@@ -445,13 +435,13 @@ public class FIPSApplicationStateMachineUtilTest {
 	}
 
 	private void _assertEnvelope(
-		Map<String, Object> record, String key, String value) {
+		String key, Map<String, Object> record, String value) {
 
 		Assert.assertEquals(String.valueOf(record), value, record.get(key));
 	}
 
 	private void _assertField(
-		Map<String, Object> record, String key, String value) {
+		String key, Map<String, Object> record, String value) {
 
 		Map<?, ?> fields = (Map<?, ?>)record.get("fields");
 
@@ -519,11 +509,10 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Assert.assertEquals(_records.toString(), 2, _records.size());
 
-		_assertEnvelope(_records.get(1), "severity", "critical");
-
-		_assertField(_records.get(1), "failed-step", "Self test");
-		_assertField(_records.get(1), "from-state", "Self-Test");
-		_assertField(_records.get(1), "to-state", "Error");
+		_assertEnvelope("severity", _records.get(1), "critical");
+		_assertField("failed-step", _records.get(1), "Self test");
+		_assertField("from-state", _records.get(1), "Self-Test");
+		_assertField("to-state", _records.get(1), "Error");
 	}
 
 	private void _testTransition(
@@ -542,12 +531,11 @@ public class FIPSApplicationStateMachineUtilTest {
 
 		Assert.assertEquals(_records.toString(), 1, _records.size());
 
-		_assertEnvelope(_records.get(0), "event-type", "fips-state-transition");
-
+		_assertEnvelope("event-type", _records.get(0), "fips-state-transition");
 		_assertField(
-			_records.get(0), "from-state", fromFIPSApplicationState.getValue());
+			"from-state", _records.get(0), fromFIPSApplicationState.getValue());
 		_assertField(
-			_records.get(0), "to-state", toFIPSApplicationState.getValue());
+			"to-state", _records.get(0), toFIPSApplicationState.getValue());
 	}
 
 	private void _testTransitionWithIllegalState(
