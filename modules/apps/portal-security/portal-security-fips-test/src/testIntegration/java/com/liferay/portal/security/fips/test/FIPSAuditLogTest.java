@@ -130,6 +130,29 @@ public class FIPSAuditLogTest {
 	}
 
 	@Test
+	public void testAuditLogRecordsCarryTheFederationTokenRejectedFields()
+		throws Exception {
+
+		for (JSONObject jsonObject : _getRecordJSONObjects()) {
+			String eventType = jsonObject.getString("event-type");
+
+			if (!eventType.equals("federation-token-rejected")) {
+				continue;
+			}
+
+			JSONObject fieldsJSONObject = jsonObject.getJSONObject("fields");
+
+			for (String fieldKey : _FEDERATION_TOKEN_REJECTED_FIELD_KEYS) {
+				Assert.assertTrue(
+					StringBundler.concat(
+						"Unable to find \"", fieldKey,
+						"\" in the FIPS audit record ", jsonObject),
+					fieldsJSONObject.has(fieldKey));
+			}
+		}
+	}
+
+	@Test
 	public void testAuditLogRecordsTheBootStateTransitions() throws Exception {
 		List<String> transitions = new ArrayList<>();
 
@@ -178,6 +201,11 @@ public class FIPSAuditLogTest {
 		"cmvp-certificate-id", "deployment-instance-id", "event-schema-version",
 		"event-sequence", "event-type", "fields", "provider-name",
 		"provider-version", "severity", "timestamp"
+	};
+
+	private static final String[] _FEDERATION_TOKEN_REJECTED_FIELD_KEYS = {
+		"fips-state", "offending-value", "receiving-endpoint", "token-issuer",
+		"token-type"
 	};
 
 }
