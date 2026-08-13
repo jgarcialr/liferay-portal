@@ -10,6 +10,7 @@ import com.liferay.portal.kernel.test.ReflectionTestUtil;
 import com.liferay.portal.kernel.test.util.PropsValuesTestUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.PropsUtil;
+import com.liferay.portal.kernel.util.ServerDetector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,19 +55,31 @@ public class FIPSApplicationStateMachineUtilTest {
 		).thenReturn(
 			_logger
 		);
+
+		_serverDetectorMockedStatic = Mockito.mockStatic(
+			ServerDetector.class, Mockito.CALLS_REAL_METHODS);
+
+		_serverDetectorMockedStatic.when(
+			ServerDetector::getServerId
+		).thenReturn(
+			null
+		);
 	}
 
 	@AfterClass
 	public static void tearDownClass() {
 		_logManagerMockedStatic.close();
+		_serverDetectorMockedStatic.close();
 	}
 
 	@Before
 	public void setUp() {
 		Mockito.reset(_logger);
 
-		_safeCloseable = PropsValuesTestUtil.swapWithSafeCloseable(
+		_safeCloseable1 = PropsValuesTestUtil.swapWithSafeCloseable(
 			"FIPS_AUDIT_DEPLOYMENT_INSTANCE_ID", RandomTestUtil.randomString());
+		_safeCloseable2 = PropsValuesTestUtil.swapWithSafeCloseable(
+			"FIPS_ENABLED", true);
 
 		Mockito.doAnswer(
 			invocation -> {
@@ -87,7 +100,8 @@ public class FIPSApplicationStateMachineUtilTest {
 
 	@After
 	public void tearDown() {
-		_safeCloseable.close();
+		_safeCloseable1.close();
+		_safeCloseable2.close();
 	}
 
 	@Test
@@ -569,8 +583,10 @@ public class FIPSApplicationStateMachineUtilTest {
 	private static Logger _logger;
 
 	private static MockedStatic<LogManager> _logManagerMockedStatic;
+	private static MockedStatic<ServerDetector> _serverDetectorMockedStatic;
 
 	private final List<Map<String, Object>> _records = new ArrayList<>();
-	private SafeCloseable _safeCloseable;
+	private SafeCloseable _safeCloseable1;
+	private SafeCloseable _safeCloseable2;
 
 }

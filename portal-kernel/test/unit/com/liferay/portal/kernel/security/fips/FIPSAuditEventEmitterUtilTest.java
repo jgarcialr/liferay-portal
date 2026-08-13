@@ -79,26 +79,34 @@ public class FIPSAuditEventEmitterUtilTest {
 		).thenReturn(
 			_logger
 		);
+
+		_serverDetectorMockedStatic = Mockito.mockStatic(
+			ServerDetector.class, Mockito.CALLS_REAL_METHODS);
 	}
 
 	@AfterClass
 	public static void tearDownClass() {
 		_logManagerMockedStatic.close();
+		_serverDetectorMockedStatic.close();
 	}
 
 	@Before
 	public void setUp() {
 		Mockito.reset(_logger);
 
-		_safeCloseable = PropsValuesTestUtil.swapWithSafeCloseable(
+		_safeCloseable1 = PropsValuesTestUtil.swapWithSafeCloseable(
 			"FIPS_AUDIT_DEPLOYMENT_INSTANCE_ID", RandomTestUtil.randomString());
+		_safeCloseable2 = PropsValuesTestUtil.swapWithSafeCloseable(
+			"FIPS_ENABLED", true);
 
 		_mockLogManager(null);
+		_mockServerId(null);
 	}
 
 	@After
 	public void tearDown() {
-		_safeCloseable.close();
+		_safeCloseable1.close();
+		_safeCloseable2.close();
 	}
 
 	@Test
@@ -156,61 +164,49 @@ public class FIPSAuditEventEmitterUtilTest {
 
 	@Test
 	public void testEmitChecksTheAuditLogPermissionsAfterWritingTheRecord() {
-		try (SafeCloseable safeCloseable =
-				PropsValuesTestUtil.swapWithSafeCloseable("FIPS_ENABLED", true);
-			MockedStatic<ServerDetector> serverDetectorMockedStatic =
-				Mockito.mockStatic(
-					ServerDetector.class, Mockito.CALLS_REAL_METHODS)) {
+		_mockServerId("tomcat");
 
-			serverDetectorMockedStatic.when(
-				ServerDetector::getServerId
-			).thenReturn(
-				"tomcat"
-			);
+		Mockito.when(
+			_logger.isEnabled(Level.INFO)
+		).thenReturn(
+			true
+		);
 
-			Mockito.when(
-				_logger.isEnabled(Level.INFO)
-			).thenReturn(
-				true
-			);
+		RollingFileAppender rollingFileAppender = _mockRollingFileAppender(
+			"/dev/null/missing.ndjson");
 
-			RollingFileAppender rollingFileAppender = _mockRollingFileAppender(
-				"/dev/null/missing.ndjson");
+		Mockito.doReturn(
+			Mockito.mock(FIPSAuditNDJSONLayout.class)
+		).when(
+			rollingFileAppender
+		).getLayout();
 
-			Mockito.doReturn(
-				Mockito.mock(FIPSAuditNDJSONLayout.class)
-			).when(
-				rollingFileAppender
-			).getLayout();
+		RollingFileManager rollingFileManager =
+			rollingFileAppender.getManager();
 
-			RollingFileManager rollingFileManager =
-				rollingFileAppender.getManager();
+		Mockito.when(
+			rollingFileManager.getFilePermissions()
+		).thenReturn(
+			null
+		);
 
-			Mockito.when(
-				rollingFileManager.getFilePermissions()
-			).thenReturn(
-				null
-			);
+		_mockLogManager(rollingFileAppender);
 
-			_mockLogManager(rollingFileAppender);
+		FIPSAuditEventEmitterUtil.emit(
+			new FIPSAuditEvent(
+				RandomTestUtil.randomString(), FIPSAuditEvent.Severity.INFO));
 
-			FIPSAuditEventEmitterUtil.emit(
-				new FIPSAuditEvent(
-					RandomTestUtil.randomString(),
-					FIPSAuditEvent.Severity.INFO));
+		InOrder inOrder = Mockito.inOrder(_logger, rollingFileManager);
 
-			InOrder inOrder = Mockito.inOrder(_logger, rollingFileManager);
+		inOrder.verify(
+			_logger
+		).log(
+			Mockito.eq(Level.INFO), Mockito.any(Message.class)
+		);
 
-			inOrder.verify(
-				_logger
-			).log(
-				Mockito.eq(Level.INFO), Mockito.any(Message.class)
-			);
-
-			inOrder.verify(
-				rollingFileManager
-			).getFilePermissions();
-		}
+		inOrder.verify(
+			rollingFileManager
+		).getFilePermissions();
 	}
 
 	@Test
@@ -407,6 +403,21 @@ public class FIPSAuditEventEmitterUtilTest {
 	}
 
 	@Test
+	public void testEmitSkipsRecordWhenFIPSIsDisabled() {
+		try (SafeCloseable safeCloseable =
+				PropsValuesTestUtil.swapWithSafeCloseable(
+					"FIPS_ENABLED", false)) {
+
+			FIPSAuditEventEmitterUtil.emit(
+				new FIPSAuditEvent(
+					RandomTestUtil.randomString(),
+					FIPSAuditEvent.Severity.INFO));
+
+			Mockito.verifyNoInteractions(_logger);
+		}
+	}
+
+	@Test
 	public void testEmitSyncsCriticalRecordOnly() {
 		_mockLogManager(_mockRollingFileAppender("/dev/null/missing.ndjson"));
 
@@ -559,6 +570,14 @@ public class FIPSAuditEventEmitterUtilTest {
 		return rollingFileAppender;
 	}
 
+	private void _mockServerId(String serverId) {
+		_serverDetectorMockedStatic.when(
+			ServerDetector::getServerId
+		).thenReturn(
+			serverId
+		);
+	}
+
 	private void _testEmitLogsRecordAtTheSeverityLevel(
 		Level level, FIPSAuditEvent.Severity severity) {
 
@@ -589,31 +608,22 @@ public class FIPSAuditEventEmitterUtilTest {
 	}
 
 	private void _testEmitThrows() {
-		try (SafeCloseable safeCloseable =
-				PropsValuesTestUtil.swapWithSafeCloseable("FIPS_ENABLED", true);
-			MockedStatic<ServerDetector> serverDetectorMockedStatic =
-				Mockito.mockStatic(
-					ServerDetector.class, Mockito.CALLS_REAL_METHODS)) {
+		_mockServerId("tomcat");
 
-			serverDetectorMockedStatic.when(
-				ServerDetector::getServerId
-			).thenReturn(
-				"tomcat"
-			);
-
-			Assert.assertThrows(
-				IllegalStateException.class,
-				() -> FIPSAuditEventEmitterUtil.emit(
-					new FIPSAuditEvent(
-						RandomTestUtil.randomString(),
-						FIPSAuditEvent.Severity.INFO)));
-		}
+		Assert.assertThrows(
+			IllegalStateException.class,
+			() -> FIPSAuditEventEmitterUtil.emit(
+				new FIPSAuditEvent(
+					RandomTestUtil.randomString(),
+					FIPSAuditEvent.Severity.INFO)));
 	}
 
 	private static Logger _logger;
 
 	private static MockedStatic<LogManager> _logManagerMockedStatic;
+	private static MockedStatic<ServerDetector> _serverDetectorMockedStatic;
 
-	private SafeCloseable _safeCloseable;
+	private SafeCloseable _safeCloseable1;
+	private SafeCloseable _safeCloseable2;
 
 }

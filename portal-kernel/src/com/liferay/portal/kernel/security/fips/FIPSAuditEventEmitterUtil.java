@@ -63,6 +63,10 @@ import org.apache.logging.log4j.message.ObjectMessage;
 public class FIPSAuditEventEmitterUtil {
 
 	public static void emit(FIPSAuditEvent fipsAuditEvent) {
+		if (!PropsValues.FIPS_ENABLED) {
+			return;
+		}
+
 		FIPSAuditEvent.Severity severity = fipsAuditEvent.getSeverity();
 
 		_write(

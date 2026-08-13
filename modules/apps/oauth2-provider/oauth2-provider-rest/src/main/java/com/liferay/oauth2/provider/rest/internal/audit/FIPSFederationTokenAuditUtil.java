@@ -9,6 +9,7 @@ import com.liferay.portal.kernel.security.fips.FIPSApplicationState;
 import com.liferay.portal.kernel.security.fips.FIPSApplicationStateMachineUtil;
 import com.liferay.portal.kernel.security.fips.FIPSAuditEvent;
 import com.liferay.portal.kernel.security.fips.FIPSAuditEventEmitterUtil;
+import com.liferay.portal.kernel.util.PropsValues;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -23,6 +24,10 @@ public class FIPSFederationTokenAuditUtil {
 
 	public static void emitFederationTokenRejected(
 		String issuer, String offendingValue) {
+
+		if (!PropsValues.FIPS_ENABLED) {
+			return;
+		}
 
 		FIPSApplicationState fipsApplicationState =
 			FIPSApplicationStateMachineUtil.getFIPSApplicationState();
