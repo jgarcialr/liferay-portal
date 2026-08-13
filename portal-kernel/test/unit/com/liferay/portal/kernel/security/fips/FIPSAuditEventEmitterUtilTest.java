@@ -299,6 +299,8 @@ public class FIPSAuditEventEmitterUtilTest {
 			Level.ERROR, FIPSAuditEvent.Severity.CRITICAL);
 		_testEmitLogsRecordAtTheSeverityLevel(
 			Level.INFO, FIPSAuditEvent.Severity.INFO);
+		_testEmitLogsRecordAtTheSeverityLevel(
+			Level.WARN, FIPSAuditEvent.Severity.WARNING);
 	}
 
 	@Test

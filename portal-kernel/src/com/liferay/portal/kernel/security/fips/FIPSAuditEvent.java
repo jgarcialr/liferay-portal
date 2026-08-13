@@ -52,7 +52,7 @@ public class FIPSAuditEvent {
 
 	public enum Severity {
 
-		CRITICAL("critical"), INFO("info");
+		CRITICAL("critical"), INFO("info"), WARNING("warning");
 
 		public String getValue() {
 			return _value;

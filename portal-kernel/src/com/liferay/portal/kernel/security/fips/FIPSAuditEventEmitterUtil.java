@@ -187,6 +187,10 @@ public class FIPSAuditEventEmitterUtil {
 			return Level.ERROR;
 		}
 
+		if (severity == FIPSAuditEvent.Severity.WARNING) {
+			return Level.WARN;
+		}
+
 		return Level.INFO;
 	}
 
