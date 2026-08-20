@@ -6,6 +6,7 @@
 package com.liferay.oauth2.provider.rest.internal.endpoint.access.token.grant.handler;
 
 import com.liferay.oauth2.provider.configuration.OAuth2ProviderConfiguration;
+import com.liferay.oauth2.provider.rest.internal.audit.FIPSFederationTokenAuditUtil;
 import com.liferay.oauth2.provider.rest.internal.configuration.OAuth2InAssertionConfiguration;
 import com.liferay.oauth2.provider.rest.internal.endpoint.constants.OAuth2ProviderRESTEndpointConstants;
 import com.liferay.oauth2.provider.rest.internal.endpoint.liferay.LiferayOAuthDataProvider;
@@ -255,8 +256,19 @@ public class LiferayJWTBearerGrantHandler extends BaseAccessTokenGrantHandler {
 
 				JwsHeaders jwsHeaders = jwtToken.getJwsHeaders();
 
-				OAuth2JWKValidatorUtil.validateJWSAlgorithm(
-					jwsHeaders.getAlgorithm());
+				try {
+					OAuth2JWKValidatorUtil.validateJWSAlgorithm(
+						jwsHeaders.getAlgorithm());
+				}
+				catch (SecurityException securityException) {
+					JwtClaims rejectedJwtClaims = jwtToken.getClaims();
+
+					FIPSFederationTokenAuditUtil.writeFederationTokenRejected(
+						rejectedJwtClaims.getIssuer(),
+						jwsHeaders.getAlgorithm());
+
+					throw securityException;
+				}
 
 				JwtClaims jwtClaims = jwtToken.getClaims();
 
