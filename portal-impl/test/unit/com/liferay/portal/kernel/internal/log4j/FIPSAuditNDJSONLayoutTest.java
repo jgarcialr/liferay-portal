@@ -145,16 +145,6 @@ public class FIPSAuditNDJSONLayoutTest {
 	}
 
 	@Test
-	public void testToSerializableWritesNestedMaps() {
-		Assert.assertEquals(
-			"{\"fields\":{\"from-state\":\"SELF_TEST\"}}\n",
-			_toSerializable(
-				Collections.singletonMap(
-					"fields",
-					Collections.singletonMap("from-state", "SELF_TEST"))));
-	}
-
-	@Test
 	public void testToSerializableWritesValueTypes() {
 		_testToSerializable(
 			"array", new String[] {"first", "second"},
@@ -162,6 +152,9 @@ public class FIPSAuditNDJSONLayoutTest {
 		_testToSerializable("boolean", Boolean.TRUE, "true");
 		_testToSerializable("decimal", 1.5D, "1.5");
 		_testToSerializable("iterable", Arrays.asList("one", 2), "[\"one\",2]");
+		_testToSerializable(
+			"map", Collections.singletonMap("first", "second"),
+			"{\"first\":\"second\"}");
 		_testToSerializable("number", 42, "42");
 		_testToSerializable("string", "text", "\"text\"");
 	}
