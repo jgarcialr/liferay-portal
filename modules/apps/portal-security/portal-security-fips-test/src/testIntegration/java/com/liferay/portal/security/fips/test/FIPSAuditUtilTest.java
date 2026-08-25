@@ -15,7 +15,6 @@ import com.liferay.portal.kernel.security.fips.FIPSAuditEvent;
 import com.liferay.portal.kernel.security.fips.FIPSAuditUtil;
 import com.liferay.portal.kernel.test.rule.AggregateTestRule;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
-import com.liferay.portal.kernel.util.GetterUtil;
 import com.liferay.portal.kernel.util.ListUtil;
 import com.liferay.portal.kernel.util.PropsValues;
 import com.liferay.portal.kernel.util.Time;
@@ -102,8 +101,7 @@ public class FIPSAuditUtilTest {
 		Assert.assertTrue(jsonObject.has("timestamp"));
 
 		Assert.assertEquals(
-			GetterUtil.getString(
-				PropsValues.FIPS_AUDIT_PROVIDER_CMVP_CERTIFICATE_ID),
+			PropsValues.FIPS_AUDIT_PROVIDER_CMVP_CERTIFICATE_ID,
 			jsonObject.getString("cmvp-certificate-id"));
 
 		Assert.assertTrue(
