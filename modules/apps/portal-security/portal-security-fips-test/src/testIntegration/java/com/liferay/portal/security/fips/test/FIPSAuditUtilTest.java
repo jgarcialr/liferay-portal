@@ -271,11 +271,12 @@ public class FIPSAuditUtilTest {
 
 		Assert.assertTrue(Files.exists(path));
 
-		String persistedId = new String(
+		String deploymentInstanceId = new String(
 			Files.readAllBytes(path), StandardCharsets.UTF_8);
 
 		Assert.assertEquals(
-			persistedId.trim(), jsonObject.getString("deployment-instance-id"));
+			deploymentInstanceId.trim(),
+			jsonObject.getString("deployment-instance-id"));
 	}
 
 	@Test
