@@ -6,6 +6,7 @@
 package com.liferay.portal.security.sso.openid.connect.internal.util;
 
 import com.liferay.oauth2.provider.util.OAuth2JWKValidatorUtil;
+import com.liferay.portal.kernel.security.fips.FIPSFederationTokenAuditUtil;
 import com.liferay.portal.kernel.test.util.RandomTestUtil;
 import com.liferay.portal.kernel.util.Http;
 import com.liferay.portal.kernel.util.HttpUtil;
@@ -223,7 +224,18 @@ public class OpenIdConnectTokenRequestUtilTest {
 			oidcClientMetadata
 		);
 
-		try (MockedStatic<OAuth2JWKValidatorUtil>
+		String tokenIssuer = RandomTestUtil.randomString();
+
+		Mockito.when(
+			_oidcProviderMetadata.getIssuer()
+		).thenReturn(
+			new Issuer(tokenIssuer)
+		);
+
+		try (MockedStatic<FIPSFederationTokenAuditUtil>
+				fipsFederationTokenAuditUtilMockedStatic = Mockito.mockStatic(
+					FIPSFederationTokenAuditUtil.class);
+			MockedStatic<OAuth2JWKValidatorUtil>
 				oAuth2JWKValidatorUtilMockedStatic = Mockito.mockStatic(
 					OAuth2JWKValidatorUtil.class)) {
 
@@ -246,6 +258,10 @@ public class OpenIdConnectTokenRequestUtilTest {
 
 			oAuth2JWKValidatorUtilMockedStatic.verify(
 				() -> OAuth2JWKValidatorUtil.validateJWSAlgorithm("HS256"));
+
+			fipsFederationTokenAuditUtilMockedStatic.verify(
+				() -> FIPSFederationTokenAuditUtil.writeRejected(
+					"backchannel", "HS256", tokenIssuer, "OIDC"));
 		}
 	}
 
