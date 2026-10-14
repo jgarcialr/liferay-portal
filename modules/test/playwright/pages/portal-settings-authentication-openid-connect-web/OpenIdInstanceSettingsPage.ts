@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: LGPL-2.1-or-later OR LicenseRef-Liferay-DXP-EULA-2.0.0-2023-06
  */
 
-import {Locator, Page} from '@playwright/test';
+import {Locator, Page, expect} from '@playwright/test';
 
 import {clickAndExpectToBeVisible} from '../../utils/clickAndExpectToBeVisible';
 import getRandomString from '../../utils/getRandomString';
@@ -12,6 +12,7 @@ import {InstanceSettingsPage} from '../configuration-admin-web/InstanceSettingsP
 
 export class OpenIdInstanceSettingsPage {
 	readonly addButton: Locator;
+	readonly allowUpstreamTokenForwardingCheckbox: Locator;
 	readonly customClaimField: Locator;
 	readonly discoveryEndpointField: Locator;
 	readonly enabledCheckbox: Locator;
@@ -24,10 +25,14 @@ export class OpenIdInstanceSettingsPage {
 	readonly page: Page;
 	readonly providerNameField: Locator;
 	readonly saveButton: Locator;
+	readonly updateButton: Locator;
 	readonly userCustomFieldsSelect: Locator;
 
 	constructor(page: Page) {
 		this.addButton = page.getByRole('link', {name: 'Add'});
+		this.allowUpstreamTokenForwardingCheckbox = page.getByLabel(
+			'Allow Upstream Token Forwarding'
+		);
 		this.customClaimField = page.getByLabel('Custom Claim');
 		this.discoveryEndpointField = page.getByLabel(
 			'Discovery Endpoint Set the'
@@ -51,6 +56,7 @@ export class OpenIdInstanceSettingsPage {
 		this.page = page;
 		this.providerNameField = page.getByLabel('Provider Name');
 		this.saveButton = page.getByRole('button', {name: 'Save'});
+		this.updateButton = page.getByRole('button', {name: 'Update'});
 		this.userCustomFieldsSelect = page.getByLabel('User Custom Fields');
 	}
 
@@ -58,14 +64,23 @@ export class OpenIdInstanceSettingsPage {
 		openIdProvider: string,
 		providerName: string,
 		customClaim?: TCustomClaim,
-		matcherField?: string
+		matcherField?: string,
+		{
+			allowUpstreamTokenForwarding = false,
+			openIdConnectClientId = getRandomString(),
+			openIdConnectClientSecret = getRandomString(),
+		}: {
+			allowUpstreamTokenForwarding?: boolean;
+			openIdConnectClientId?: string;
+			openIdConnectClientSecret?: string;
+		} = {}
 	) {
 		await this.clickOpenIDConnectProviderConnectionMenuItem();
 		await this.addButton.click();
 		await this.providerNameField.fill(providerName);
 		await this.discoveryEndpointField.fill(openIdProvider);
-		await this.openIDConnectClientIDField.fill(getRandomString());
-		await this.openIDConnectClientSecret.fill(getRandomString());
+		await this.openIDConnectClientIDField.fill(openIdConnectClientId);
+		await this.openIDConnectClientSecret.fill(openIdConnectClientSecret);
 
 		if (customClaim) {
 			await this.userCustomFieldsSelect.selectOption({
@@ -78,6 +93,10 @@ export class OpenIdInstanceSettingsPage {
 
 		if (matcherField) {
 			await this.matcherField.selectOption(matcherField);
+		}
+
+		if (allowUpstreamTokenForwarding) {
+			await this.allowUpstreamTokenForwardingCheckbox.check();
 		}
 
 		await this.saveButton.click();
@@ -108,6 +127,17 @@ export class OpenIdInstanceSettingsPage {
 
 	async goto() {
 		await this.instanceSettingsPage.goToSSO();
+	}
+
+	async goToOpenIDConnectProviderConnectionConfiguration(
+		providerName: string
+	) {
+		await this.clickOpenIDConnectProviderConnectionMenuItem();
+		await this.page
+			.getByRole('link', {exact: true, name: providerName})
+			.click();
+
+		await expect(this.providerNameField).toHaveValue(providerName);
 	}
 
 	async removeOpenIDConnectProviderConnectionConfiguration(
