@@ -37,6 +37,10 @@ import io.fabric8.kubernetes.client.informers.ResourceEventHandler;
 import io.fabric8.kubernetes.client.informers.SharedIndexInformer;
 import io.fabric8.kubernetes.client.informers.SharedInformerEventListener;
 import io.fabric8.kubernetes.client.informers.SharedInformerFactory;
+import io.fabric8.kubernetes.client.utils.Utils;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import java.util.Dictionary;
 import java.util.List;
@@ -747,7 +751,8 @@ public class AgentPortalK8sConfigMapModifier
 	}
 
 	private Config _toConfig(
-		PortalK8sAgentConfiguration portalK8sAgentConfiguration) {
+			PortalK8sAgentConfiguration portalK8sAgentConfiguration)
+		throws Exception {
 
 		Config config = Config.empty();
 
@@ -771,7 +776,20 @@ public class AgentPortalK8sConfigMapModifier
 				portalK8sAgentConfiguration.apiServerPort(), StringPool.SLASH));
 
 		config.setNamespace(portalK8sAgentConfiguration.namespace());
-		config.setOauthToken(portalK8sAgentConfiguration.saToken());
+
+		String saToken = portalK8sAgentConfiguration.saToken();
+
+		if (Validator.isNull(saToken)) {
+			saToken = new String(
+				Files.readAllBytes(
+					Paths.get(
+						Utils.getSystemPropertyOrEnvVar(
+							Config.
+								KUBERNETES_AUTH_SERVICEACCOUNT_TOKEN_FILE_SYSTEM_PROPERTY,
+							Config.KUBERNETES_SERVICE_ACCOUNT_TOKEN_PATH))));
+		}
+
+		config.setOauthToken(saToken);
 
 		Config.configFromSysPropsOrEnvVars(config);
 
