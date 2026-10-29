@@ -342,11 +342,13 @@ public class SecurityTest extends BaseClientTestCase {
 
 		Assert.assertFalse(bodyString.contains(_INJECTED_SCRIPT));
 		Assert.assertTrue(
+			_pageURI + "\n" + bodyString,
 			bodyString.contains(HtmlUtil.escape(_INJECTED_SCRIPT)));
 	}
 
 	private void _assertThumbnailURLIsEscaped(String bodyString) {
 		Assert.assertTrue(
+			_pageURI + "\n" + bodyString,
 			bodyString.contains(
 				"src=\"http://localhost/documents/1/2/icon.png?version=1.0" +
 					"&amp;t=1&amp;imageThumbnail=1&#39;\""));
@@ -457,6 +459,8 @@ public class SecurityTest extends BaseClientTestCase {
 		Function<WebTarget, Invocation.Builder> invocationBuilderFunction,
 		WebTarget portalWebTarget, URI uri) {
 
+		_pageURI = uri;
+
 		WebTarget webTarget = portalWebTarget.path(uri.getPath());
 
 		Map<String, String[]> parameterMap = HttpComponentsUtil.getParameterMap(
@@ -564,6 +568,7 @@ public class SecurityTest extends BaseClientTestCase {
 	@Inject
 	private OAuth2ScopeGrantLocalService _oAuth2ScopeGrantLocalService;
 
+	private URI _pageURI;
 	private User _user;
 
 	private class SecurityTestPreparatorBundleActivator
